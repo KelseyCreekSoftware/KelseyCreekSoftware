@@ -35,8 +35,46 @@ Daiex is a cross-platform C++ library that provides functions to import and expo
 
 The ANSI/VITA 49.2 standard, which is part of the VITA Radio Transport (VRT) family of standards, defines a signal/spectrum protocol that expresses spectrum observation, spectrum operations, and capabilities of RF devices. 
 
-## Inspectrum
+
+## Tools
+
+### Inspectrum
+
+Inspectrum is a tool for analysing captured signals, primarily from software-defined radio receivers.
+
+https://github.com/miek/inspectrum/tree/main
+
+Inspectrum supports the following file types:
+
+ * `*.sigmf-meta, *.sigmf-data` - SigMF recordings
+ * `*.cf32`, `*.fc32`, `*.cfile` - Complex 32-bit floating point samples (GNU Radio, osmocom_fft)
+ * `*.cf64`, `*.fc64` - Complex 64-bit floating point samples
+ * `*.cs32`, `*.sc32`, `*.c32` - Complex 32-bit signed integer samples (SDRAngel)
+ * `*.cs16`, `*.sc16`, `*.c16` - Complex 16-bit signed integer samples (BladeRF)
+ * `*.cs8`, `*.sc8`, `*.c8` - Complex 8-bit signed integer samples (HackRF)
+ * `*.cu8`, `*.uc8` - Complex 8-bit unsigned integer samples (RTL-SDR)
+ * `*.f32` - Real 32-bit floating point samples
+ * `*.f64` - Real 64-bit floating point samples (MATLAB)
+ * `*.s16` - Real 16-bit signed integer samples
+ * `*.s8` - Real 8-bit signed integer samples
+ * `*.u8` - Real 8-bit unsigned integer samples
+
+
+### Pushbutton IQ Recorder with descriptive filenames
+
+Includes information in the filename that describes the signal.
+
+https://wiki.gnuradio.org/index.php?title=Pushbutton_IQ_Recorder_with_descriptive_filenames
+
+
+### Artemis
+
+Artemis is a software designed to assist radio frequency (RF) signal identification and storage.
+
+https://www.aresvalley.com/
 
 ## WaveTrap
+
+WAVETRAP is a Push-Button IQ Recorder intended to make capturing RF Data in the field fast and simple. 
 
 https://github.com/muaddib1984/wavetrap
