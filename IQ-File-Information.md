@@ -20,6 +20,21 @@ This Signal Metadata Format SigMF namespace extension describes the National Tel
 
 https://github.com/NTIA/sigmf-ns-ntia/
 
+## Rohde and Schwarz - I/Q Data File Format (iq-tar)
+ 
+ I/Q data is packed in a file with the extension .iq.tar. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the
+ source of data, e.g. the sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both inside one file. In addition, the
+ file format allows you to preview the I/Q data in a web browser, and allows you to include user-specific data.
+
+https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
+
+## VITA
+
+### VITA 49.2-2017
+
+The ANSI/VITA 49.2 standard, which is part of the VITA Radio Transport (VRT) family of standards, defines a signal/spectrum protocol that expresses spectrum observation, spectrum operations, and capabilities of RF devices. 
+
+https://www.vita.com/page-1855484
 
 ## HDF5
 
@@ -27,11 +42,36 @@ ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with 
 
 https://pypi.org/project/itusm2117/
 
-## Rohde and the other guy...
 
-https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
+## Tools
 
-### I/Q Data Import Export library (daiex)
+### SigMF Converter
+
+SigMF Converter is an online file converter designed to convert various file formats to the SigMF format. It supports the following formats:
+
+ * `*.vita49` - Vita49 recordings
+ 
+ * `*.wav (Audio format)
+
+The SigMF Converter  outputs:
+
+* `*.sigmf-meta, *.sigmf-data` - SigMF recordings
+ 
+https://iqengine.org/convert
+
+### MISP SigMF module
+
+Expands a SigMF Recording object into a SigMF Expanded Recording object, extracts a SigMF archive into a SigMF Recording object.
+
+https://github.com/MISP/misp-modules/blob/main/misp_modules/modules/expansion/sigmf_expand.py
+
+### XMidasBlueReader
+
+This MATLAB class is a utility to progressively read through BLUE -format files.
+
+https://github.com/Geontech/XMidasBlueReader/
+
+### Rohde and Schwarz I/Q Data Import Export library (daiex)
 
 Daiex is a cross-platform C++ library that provides functions to import and export numeric I/Q data to or from various file formats. The library provides standardized read and write functions that encapsulate all file operations. The following file formats are supported:
 
@@ -47,27 +87,7 @@ Daiex is a cross-platform C++ library that provides functions to import and expo
 |Matlab v4	|.mat	|A file containing I/Q data in matlab file format v4. Channel related information is stored in matlab variables with names starting with 'ChX_'. 'X' represents the number of the channel with a lower bound of 1, e.g. variable Ch1_ChannelName contains the name of the first channel. The corresponding data is contained in ChX_Data. |
 |Matlab v7.3	|.mat	|A file containing I/Q data in matlab file format v7.3. Supportes the same functionality as matlab v4 file format, but requires the Matlab Compiler Runtime (MCR) to be installed on the system.|
 
-## VITA
-
-### VITA 49.2-2017
-
-The ANSI/VITA 49.2 standard, which is part of the VITA Radio Transport (VRT) family of standards, defines a signal/spectrum protocol that expresses spectrum observation, spectrum operations, and capabilities of RF devices. 
-
-https://www.vita.com/page-1855484
-
-## Tools
-
-### MISP SigMF module
-
-Expands a SigMF Recording object into a SigMF Expanded Recording object, extracts a SigMF archive into a SigMF Recording object.
-
-https://github.com/MISP/misp-modules/blob/main/misp_modules/modules/expansion/sigmf_expand.py
-
-### XMidasBlueReader
-
-This MATLAB class is a utility to progressively read through BLUE -format files.
-
-https://github.com/Geontech/XMidasBlueReader/
+https://github.com/Rohde-Schwarz/daiex
 
 ### Inspectrum
 
