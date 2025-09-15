@@ -43,6 +43,12 @@ ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with 
 https://pypi.org/project/itusm2117/
 
 
+## GPS Global Navigation Satellite System (GNSS) Software Defined Receiver Metadata Standard
+
+This specification standardizes the metadata associated with GPS GNSS SDR sampled data files and the layout of the binary sample files.
+
+https://sdr.ion.org/
+
 ## Tools
 
 ### SigMF Converter
