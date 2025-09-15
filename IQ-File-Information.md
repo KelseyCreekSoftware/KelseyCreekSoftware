@@ -1,13 +1,31 @@
 # Rough Notes on IQ File Information
 
+## SigMF 
+
+SigMF specifies a way to describe sets of recorded digital signal samples with metadata written in JSON. SigMF can be used to describe general information about a collection of samples, the characteristics of the system that generated the samples, features of signals themselves, and the relationship between different recordings.
+
+### SigMF Specification Version v1.2.5
+
+https://sigmf.org/
+
+### SigMF Python library
+
+SigMF is a Python library for working with radio recordings in .sigmf format according to the SigMF standard. It offers a simple and intuitive API for Python developers.
+
+https://sigmf.readthedocs.io/en/latest/index.html#
+
+## SigMF-NS-NTIA
+
+This Signal Metadata Format SigMF namespace extension describes the National Telecommunications and Information Administration (NTIA)'s open data format for recorded signal datasets.
+
+https://github.com/NTIA/sigmf-ns-ntia/
+
+
 ## HDF5
 
 ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with the intention of spectrum monitoring. Key Bridge Wireless supports the ITU in creating a library for the data format as a contribution to IEEE 1900.8 Working Group. This is an HDF5 read-write Python library for the data format in Recommendation ITU-R SM.2117-0.
 
 https://pypi.org/project/itusm2117/
-
-## NTIA
-
 
 ## Rohde and the other guy...
 
@@ -35,14 +53,27 @@ Daiex is a cross-platform C++ library that provides functions to import and expo
 
 The ANSI/VITA 49.2 standard, which is part of the VITA Radio Transport (VRT) family of standards, defines a signal/spectrum protocol that expresses spectrum observation, spectrum operations, and capabilities of RF devices. 
 
+https://www.vita.com/page-1855484
 
 ## Tools
+
+### MISP SigMF module
+
+Expands a SigMF Recording object into a SigMF Expanded Recording object, extracts a SigMF archive into a SigMF Recording object.
+
+https://github.com/MISP/misp-modules/blob/main/misp_modules/modules/expansion/sigmf_expand.py
+
+### XMidasBlueReader
+
+This MATLAB class is a utility to progressively read through BLUE -format files.
+
+https://github.com/Geontech/XMidasBlueReader/
 
 ### Inspectrum
 
 Inspectrum is a tool for analysing captured signals, primarily from software-defined radio receivers.
 
-https://github.com/miek/inspectrum/tree/main
+https://github.com/miek/inspectrum/
 
 Inspectrum supports the following file types:
 
@@ -60,12 +91,17 @@ Inspectrum supports the following file types:
  * `*.u8` - Real 8-bit unsigned integer samples
 
 
+### WaveTrap
+
+WAVETRAP is a Push-Button IQ Recorder intended to make capturing RF Data in the field fast and simple. 
+
+https://github.com/muaddib1984/wavetrap
+
 ### Pushbutton IQ Recorder with descriptive filenames
 
 Includes information in the filename that describes the signal.
 
 https://wiki.gnuradio.org/index.php?title=Pushbutton_IQ_Recorder_with_descriptive_filenames
-
 
 ### Artemis
 
@@ -73,8 +109,16 @@ Artemis is a software designed to assist radio frequency (RF) signal identificat
 
 https://www.aresvalley.com/
 
-## WaveTrap
+## References and background information
 
-WAVETRAP is a Push-Button IQ Recorder intended to make capturing RF Data in the field fast and simple. 
+### IQ Files and SigMF
 
-https://github.com/muaddib1984/wavetrap
+https://pysdr.org/content/iq_files.html
+
+### GNU Radio IQ Complex Tutorial
+
+https://wiki.gnuradio.org/index.php/IQ_Complex_Tutorial
+
+*Page Updated - September 15, 2025*
+
+
