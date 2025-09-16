@@ -14,6 +14,13 @@ SigMF is a Python library for working with radio recordings in .sigmf format acc
 
 https://sigmf.readthedocs.io/en/latest/index.html#
 
+### gr-sigmf
+
+An older OOT module for sigmf. This module contains blocks to read from and write to SigMF (the Signal Metadata Format) recordings in GNU Radio.
+
+https://github.com/skysafe/gr-sigmf
+
+
 ## SigMF-NS-NTIA
 
 This Signal Metadata Format SigMF namespace extension describes the National Telecommunications and Information Administration (NTIA)'s open data format for recorded signal datasets.
