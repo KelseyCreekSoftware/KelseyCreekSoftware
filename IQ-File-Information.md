@@ -56,6 +56,13 @@ This specification standardizes the metadata associated with GPS GNSS SDR sample
 
 https://sdr.ion.org/
 
+## WAV Audio Files
+
+WAV audio files are used to store audio signals.  The most common WAV audio format is uncompressed audio in the linear pulse-code modulation (LPCM) format. LPCM is also the standard audio coding format for audio CDs, which store two-channel LPCM audio sampled at 44.1 kHz with 16 bits per sample.
+
+https://en.wikipedia.org/wiki/WAV
+
+
 ## Tools
 
 ### SigMF Converter
@@ -64,7 +71,7 @@ SigMF Converter is an online file converter designed to convert various file for
 
  * `*.vita49` - Vita49 recordings
  
- * `*.wav (Audio format)
+ * `*.wav` (Audio format)
 
 The SigMF Converter  outputs:
 
@@ -74,7 +81,7 @@ https://iqengine.org/convert
 
 ### MISP SigMF module
 
-Expands a SigMF Recording object into a SigMF Expanded Recording object, extracts a SigMF archive into a SigMF Recording object.
+The MISP SigMF module expands a SigMF Recording object into a SigMF Expanded Recording object, and extracts a SigMF archive into a SigMF Recording object.
 
 https://github.com/MISP/misp-modules/blob/main/misp_modules/modules/expansion/sigmf_expand.py
 
@@ -132,7 +139,7 @@ https://github.com/muaddib1984/wavetrap
 
 ### Pushbutton IQ Recorder with descriptive filenames
 
-Includes information in the filename that describes the signal.
+The Pushbutton IQ Recorder adds descriptive information into the filename that describes the signal.
 
 https://wiki.gnuradio.org/index.php?title=Pushbutton_IQ_Recorder_with_descriptive_filenames
 
@@ -152,6 +159,6 @@ https://pysdr.org/content/iq_files.html
 
 https://wiki.gnuradio.org/index.php/IQ_Complex_Tutorial
 
-*Page Updated - September 15, 2025*
+*Page Updated - September 16, 2025*
 
 
