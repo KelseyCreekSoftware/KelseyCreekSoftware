@@ -1,5 +1,7 @@
 # Rough Notes on IQ File Information
 
+This document summarizes key formats, standards, and tools related to IQ file handling and metadata. These formats can be evaluated and stack ranked for import into SigMF.
+
 ## SigMF 
 
 SigMF specifies a way to describe sets of recorded digital signal samples with metadata written in JSON. SigMF can be used to describe general information about a collection of samples, the characteristics of the system that generated the samples, features of signals themselves, and the relationship between different recordings.
@@ -49,6 +51,22 @@ ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with 
 
 https://pypi.org/project/itusm2117/
 
+## WAV Audio Files
+
+WAV audio files are used to store audio signals.  The most common WAV audio format is uncompressed audio in the linear pulse-code modulation (LPCM) format. LPCM is also the standard audio coding format for audio CDs, which store two-channel LPCM audio sampled at 44.1 kHz with 16 bits per sample.
+
+https://en.wikipedia.org/wiki/WAV
+
+## KeySight - Spectrum Analysis IQ File
+
+Pending research.
+
+## MATLAB
+
+Pending research.
+
+https://github.com/adamgann/matlab_utils/tree/master
+
 
 ## GPS Global Navigation Satellite System (GNSS) Software Defined Receiver Metadata Standard
 
@@ -56,12 +74,12 @@ This specification standardizes the metadata associated with GPS GNSS SDR sample
 
 https://sdr.ion.org/
 
-## WAV Audio Files
 
-WAV audio files are used to store audio signals.  The most common WAV audio format is uncompressed audio in the linear pulse-code modulation (LPCM) format. LPCM is also the standard audio coding format for audio CDs, which store two-channel LPCM audio sampled at 44.1 kHz with 16 bits per sample.
+## SatNOGS - Signal Conversion
 
-https://en.wikipedia.org/wiki/WAV
+Pending research.
 
+https://community.libre.space/
 
 ## Tools
 
@@ -87,7 +105,7 @@ https://github.com/MISP/misp-modules/blob/main/misp_modules/modules/expansion/si
 
 ### XMidasBlueReader
 
-This MATLAB class is a utility to progressively read through BLUE -format files.
+This MATLAB class is a utility to progressively read through BLUE format files.
 
 https://github.com/Geontech/XMidasBlueReader/
 
@@ -97,7 +115,7 @@ Daiex is a cross-platform C++ library that provides functions to import and expo
 
 |File format| file extension | comment|
 | --- | --- |:------------------------------|
-| iq-tar|	.iq.tar | An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the source of data, e.g. sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both in one file. |
+| iq-tar|	.iq.tar | An iq-tar file contains I/Q data in binary format together with meta data that describes the nature and the source of data, e.g. sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta data while still having both in one file. |
 |IQW (IIIQQQ) |	.iqw |	A file that contains Float32 data in a binary format ( first all I values are stored, followed by all Q values ). The file does not contain any additional header information. Note that I and Q data are first buffered to temporary files and are merged when calling close().  |
 | IQW (IQIQIQ)	| .iqw	| A file that contains Float32 data in a binary format ( values are stored in interleaved format, starting with the first I value ). The file does not contain any additional header information. The data order has to be changed before readOpen or writeOpen is called. |
 | WV (IQIQIQ)	| .wv	| A file that contains INT16 data in a binary format ( values are stored in interleaved format, starting with the first I value ). This format is used in signal generators.|
@@ -133,7 +151,7 @@ Inspectrum supports the following file types:
 
 ### WaveTrap
 
-WAVETRAP is a Push-Button IQ Recorder intended to make capturing RF Data in the field fast and simple. 
+WAVETRAP is a collection of GNURadio flowgraphs intended to make capturing RF Data in the field fast and simple. 
 
 https://github.com/muaddib1984/wavetrap
 
