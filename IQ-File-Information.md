@@ -1,6 +1,6 @@
 # Rough Notes on IQ File Information
 
-This document summarizes key formats, standards, and tools related to IQ file handling and metadata. These formats can be evaluated and stack ranked for import into SigMF.
+This document summarizes key formats, standards, and tools related to IQ file handling and metadata. These formats can be evaluated and stack ranked for possible import into SigMF.
 
 ## SigMF 
 
@@ -123,7 +123,7 @@ Daiex is a cross-platform C++ library that provides functions to import and expo
 |AID (IQIQIQ)	|.aid	|A file that contains I/Q data in a binary format ( values are stored in interleaved format, starting with the first I value ). This format is used in AMMOS project.|
 |CSV	|.csv	|A file containing I/Q data in comma-separated values format (CSV). The comma-separator used can either be a semicolon or a comma, depending on the decimal separator used to save floating-point values (either dot or comma). Additional meta data can be saved. For details see class Csv.|
 |Matlab v4	|.mat	|A file containing I/Q data in matlab file format v4. Channel related information is stored in matlab variables with names starting with 'ChX_'. 'X' represents the number of the channel with a lower bound of 1, e.g. variable Ch1_ChannelName contains the name of the first channel. The corresponding data is contained in ChX_Data. |
-|Matlab v7.3	|.mat	|A file containing I/Q data in matlab file format v7.3. Supportes the same functionality as matlab v4 file format, but requires the Matlab Compiler Runtime (MCR) to be installed on the system.|
+|Matlab v7.3	|.mat	|A file containing I/Q data in matlab file format v7.3. It supports the same functionality as matlab v4 file format, but requires the Matlab Compiler Runtime (MCR) to be installed on the system.|
 
 https://github.com/Rohde-Schwarz/daiex
 
@@ -177,6 +177,6 @@ https://pysdr.org/content/iq_files.html
 
 https://wiki.gnuradio.org/index.php/IQ_Complex_Tutorial
 
-*Page Updated - September 16, 2025*
+*Page Updated - September 18 2025*
 
 
