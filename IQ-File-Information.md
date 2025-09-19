@@ -6,7 +6,7 @@ This document summarizes key formats, standards, and tools related to IQ file ha
 
 SigMF specifies a way to describe sets of recorded digital signal samples with metadata written in JSON. SigMF can be used to describe general information about a collection of samples, the characteristics of the system that generated the samples, features of signals themselves, and the relationship between different recordings.
 
-*Includes Meta Data: Yes*
+*Includes Metadata: Yes*
 
 ### SigMF Specification Version v1.2.5
 
@@ -30,7 +30,7 @@ This Signal Metadata Format SigMF namespace extension describes the National Tel
 
 https://github.com/NTIA/sigmf-ns-ntia/
 
-*Includes Meta Data: Yes*
+*Includes Metadata: Yes*
 
 ## VITA
 
@@ -40,7 +40,7 @@ The ANSI/VITA 49.2 standard, which is part of the VITA Radio Transport (VRT) fam
 
 https://www.vita.com/page-1855484
 
-*Includes Meta Data: Yes*
+*Includes Metadata: Yes*
 
 ## HDF5
 
@@ -50,13 +50,13 @@ https://pypi.org/project/itusm2117/
 
 ## Rohde and Schwarz - I/Q Data File Format (iq-tar)
  
- I/Q data is packed in a file with the extension .iq.tar. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the
+ I/Q data is packed in a file with the extension `.iq.tar`. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the
  source of data, e.g. the sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both inside one file. In addition, the
  file format allows you to preview the I/Q data in a web browser, and allows you to include user-specific data.
 
 https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
 
-*Includes Meta Data: Yes*
+*Includes Metadata: Yes*
 
 ## Rockwell Collins
 
@@ -85,15 +85,15 @@ WIFSv2 adds:
 - Extended metadata fields (e.g., operator ID, GPS fix quality)
 - Optional compression flag (LZ4)
 
-*Includes Meta Data: Yes*
+*Includes Metadata: Yes*
 
 ### Raw Binary Dump Format (.iq / .dat)
 
-The  Raw Binary Dump Format is consecutive I/Q pairs. It is usually 16-bit signed, little-endian by default. The SampleRate and byte-order must be known externally. The file naming often mirrors WIFS naming but with .iq suffix
+The  Raw Binary Dump Format is consecutive I/Q pairs. It is usually 16-bit signed, little-endian by default. The SampleRate and byte-order must be known externally. The file naming often mirrors WIFS naming but with `.iq` suffix
 
 Filename template: `<MODEL>_<SRATE>_<YYYYMMDD>_<HHMMSS>[_segXX].wfs`
 
-*Includes Meta Data: No*
+*Includes Metadata: No*
 
 ## WAV Audio Files
 
@@ -101,13 +101,13 @@ WAV audio files are used to store audio signals.  The most common WAV audio form
 
 https://en.wikipedia.org/wiki/WAV
 
-*Includes Meta Data: No*
+*Includes Metadata: No*
 
 ## KeySight - Spectrum Analysis IQ File
 
 Pending research.
 
-*Includes Meta Data: No*
+*Includes Metadata: No*
 
 ## MATLAB
 
@@ -127,7 +127,7 @@ The RF Toolbox is commonly used in MATLAB to work with RF signals
 
 https://www.mathworks.com/help/rf/getting-started.html
 
-*Includes Meta Data: No*
+*Includes Metadata: No*
 
 
 ## GPS Global Navigation Satellite System (GNSS) Software Defined Receiver Metadata Standard
@@ -136,7 +136,7 @@ This specification standardizes the metadata associated with GPS GNSS SDR sample
 
 https://sdr.ion.org/
 
-*Includes Meta Data: Yes*
+*Includes Metadata: Yes*
 
 ## SatNOGS - Signal Conversion
 
@@ -184,13 +184,13 @@ Daiex is a cross-platform C++ library that provides functions to import and expo
 
 |File format| file extension | comment|
 | --- | --- |:------------------------------|
-| iq-tar|	.iq.tar | An iq-tar file contains I/Q data in binary format together with meta data that describes the nature and the source of data, e.g. sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta data while still having both in one file. |
+| iq-tar|	.iq.tar | An iq-tar file contains I/Q data in binary format together with Metadata that describes the nature and the source of data, e.g. sample rate. The objective of the iq-tar file format is to separate I/Q data from the Metadata while still having both in one file. |
 |IQW (IIIQQQ) |	.iqw |	A file that contains Float32 data in a binary format ( first all I values are stored, followed by all Q values ). The file does not contain any additional header information. Note that I and Q data are first buffered to temporary files and are merged when calling close().  |
 | IQW (IQIQIQ)	| .iqw	| A file that contains Float32 data in a binary format ( values are stored in interleaved format, starting with the first I value ). The file does not contain any additional header information. The data order has to be changed before readOpen or writeOpen is called. |
 | WV (IQIQIQ)	| .wv	| A file that contains INT16 data in a binary format ( values are stored in interleaved format, starting with the first I value ). This format is used in signal generators.|
 |IQX (IQIQIQ)	| .iqx	| A file that contains INT16 data in a binary format ( values are stored in interleaved format, starting with the first I value ). This format is used in device IQW.|
 |AID (IQIQIQ)	|.aid	|A file that contains I/Q data in a binary format ( values are stored in interleaved format, starting with the first I value ). This format is used in AMMOS project.|
-|CSV	|.csv	|A file containing I/Q data in comma-separated values format (CSV). The comma-separator used can either be a semicolon or a comma, depending on the decimal separator used to save floating-point values (either dot or comma). Additional meta data can be saved. For details see class Csv.|
+|CSV	|.csv	|A file containing I/Q data in comma-separated values format (CSV). The comma-separator used can either be a semicolon or a comma, depending on the decimal separator used to save floating-point values (either dot or comma). Additional Metadata can be saved. For details see class Csv.|
 |Matlab v4	|.mat	|A file containing I/Q data in matlab file format v4. Channel related information is stored in matlab variables with names starting with 'ChX_'. 'X' represents the number of the channel with a lower bound of 1, e.g. variable Ch1_ChannelName contains the name of the first channel. The corresponding data is contained in ChX_Data. |
 |Matlab v7.3	|.mat	|A file containing I/Q data in matlab file format v7.3. It supports the same functionality as matlab v4 file format, but requires the Matlab Compiler Runtime (MCR) to be installed on the system.|
 
