@@ -60,8 +60,40 @@ https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-appl
 
 ## Rockwell Collins
 
+Rockwell Collins’ tactical signal receivers (RF-3590/3595 family, SRR-1700/SRR-2100 series) offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates (typically up to 8–50 MHz instantaneous bandwidth) The data is stored in a proprietary proprietary WIFS container (.wfs/.wif2) or a straight binary dump (.iq/.dat). 
 
-*Includes Meta Data: TBD*
+### WIFS Container Format (.wfs / .wif2)
+The Waveform Information File System (WIFS) wraps raw samples with metadata in a structured header.
+
+| Section       | Size (bytes) | Description                               |
+|--------------:|-------------:|-------------------------------------------|
+| Magic ID      |            8 | ASCII "WIFSv1\0" or "WIFSv2\0"           |
+| Header Len    |            4 | Total header length (including this)      |
+| Timestamp     |            8 | GPS epoch (µs since 1970-01-01)           |
+| CenterFreq    |            8 | Hz (double-precision float)               |
+| SampleRate    |            8 | Samples/sec (double-precision float)      |
+| NumChannels   |            2 | Always 2 (I & Q)                          |
+| BitsPerSam    |            2 | 16 or 32                                  |
+| ByteOrder     |            1 | 0 = little-endian; 1 = big-endian         |
+| Metadata Fields |	Variable	  | Gain, filter BW, receiver serial/model, segment idx… |
+| Padding       | (N)  to reach Header Len | Alignment to 512-byte boundary            |
+| Data          | variable    | Interleaved I/Q samples - I₀,Q₀,I₁,Q₁,…      |
+
+WIFSv2 adds:
+
+- Digital signature block for authenticated capture
+- Extended metadata fields (e.g., operator ID, GPS fix quality)
+- Optional compression flag (LZ4)
+
+*Includes Meta Data: Yes*
+
+### Raw Binary Dump Format (.iq / .dat)
+
+The  Raw Binary Dump Format is consecutive I/Q pairs. It is usually 16-bit signed, little-endian by default. The SampleRate and byte-order must be known externally. The file naming often mirrors WIFS naming but with .iq suffix
+
+Filename template: `<MODEL>_<SRATE>_<YYYYMMDD>_<HHMMSS>[_segXX].wfs`
+
+*Includes Meta Data: No*
 
 ## WAV Audio Files
 
@@ -79,9 +111,19 @@ Pending research.
 
 ## MATLAB
 
-Pending research.
+There are several MATLAB files distributed with GNU Radio to handle writing to files from MATLAB / Octave. 
+
+https://github.com/gnuradio/gnuradio/tree/master/gr-utils/octave
+
+There are additional functions to handle other data types which are also available in the GitHub repository.
 
 https://github.com/adamgann/matlab_utils/tree/master
+
+Additional details on interoperating our covered here:
+
+The RF Toolbox is commonly used in MATLAB to work with RF signals
+
+https://www.mathworks.com/help/rf/getting-started.html
 
 *Includes Meta Data: No*
 
@@ -115,6 +157,12 @@ The SigMF Converter  outputs:
 * `*.sigmf-meta, *.sigmf-data` - SigMF recordings
  
 https://iqengine.org/convert
+
+## SigMF Reference Tools
+
+After exporting raw I/Q via MATLAB or Python, use the sigmf CLI (pip install sigmf) to generate accompanying JSON metadata.
+
+`sigmf create --samplerate 1e6 --datatype float32 --center-frequency 100`
 
 ### MISP SigMF module
 
