@@ -1,10 +1,12 @@
-# Rough Notes on IQ File Information
+# IQ File Format Information
 
 This document summarizes key formats, standards, and tools related to IQ file handling and metadata. These formats can be evaluated and stack ranked for possible import into SigMF.
 
 ## SigMF 
 
 SigMF specifies a way to describe sets of recorded digital signal samples with metadata written in JSON. SigMF can be used to describe general information about a collection of samples, the characteristics of the system that generated the samples, features of signals themselves, and the relationship between different recordings.
+
+*Includes Meta Data: Yes*
 
 ### SigMF Specification Version v1.2.5
 
@@ -22,20 +24,13 @@ An older OOT module for sigmf. This module contains blocks to read from and writ
 
 https://github.com/skysafe/gr-sigmf
 
-
 ## SigMF-NS-NTIA
 
 This Signal Metadata Format SigMF namespace extension describes the National Telecommunications and Information Administration (NTIA)'s open data format for recorded signal datasets.
 
 https://github.com/NTIA/sigmf-ns-ntia/
 
-## Rohde and Schwarz - I/Q Data File Format (iq-tar)
- 
- I/Q data is packed in a file with the extension .iq.tar. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the
- source of data, e.g. the sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both inside one file. In addition, the
- file format allows you to preview the I/Q data in a web browser, and allows you to include user-specific data.
-
-https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
+*Includes Meta Data: Yes*
 
 ## VITA
 
@@ -45,11 +40,28 @@ The ANSI/VITA 49.2 standard, which is part of the VITA Radio Transport (VRT) fam
 
 https://www.vita.com/page-1855484
 
+*Includes Meta Data: Yes*
+
 ## HDF5
 
 ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with the intention of spectrum monitoring. Key Bridge Wireless supports the ITU in creating a library for the data format as a contribution to IEEE 1900.8 Working Group. This is an HDF5 read-write Python library for the data format in Recommendation ITU-R SM.2117-0.
 
 https://pypi.org/project/itusm2117/
+
+## Rohde and Schwarz - I/Q Data File Format (iq-tar)
+ 
+ I/Q data is packed in a file with the extension .iq.tar. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the
+ source of data, e.g. the sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both inside one file. In addition, the
+ file format allows you to preview the I/Q data in a web browser, and allows you to include user-specific data.
+
+https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
+
+*Includes Meta Data: Yes*
+
+## Rockwell Collins
+
+
+*Includes Meta Data: TBD*
 
 ## WAV Audio Files
 
@@ -57,15 +69,21 @@ WAV audio files are used to store audio signals.  The most common WAV audio form
 
 https://en.wikipedia.org/wiki/WAV
 
+*Includes Meta Data: No*
+
 ## KeySight - Spectrum Analysis IQ File
 
 Pending research.
+
+*Includes Meta Data: No*
 
 ## MATLAB
 
 Pending research.
 
 https://github.com/adamgann/matlab_utils/tree/master
+
+*Includes Meta Data: No*
 
 
 ## GPS Global Navigation Satellite System (GNSS) Software Defined Receiver Metadata Standard
@@ -74,6 +92,7 @@ This specification standardizes the metadata associated with GPS GNSS SDR sample
 
 https://sdr.ion.org/
 
+*Includes Meta Data: Yes*
 
 ## SatNOGS - Signal Conversion
 
