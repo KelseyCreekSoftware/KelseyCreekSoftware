@@ -60,7 +60,7 @@ https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-appl
 
 ## Rockwell Collins
 
-Rockwell Collins’ tactical signal receivers (RF-3590/3595 family, SRR-1700/SRR-2100 series) offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates (typically up to 8–50 MHz instantaneous bandwidth) The data is stored in a proprietary proprietary WIFS container (.wfs/.wif2) or a straight binary dump (.iq/.dat). 
+Rockwell Collins’ tactical signal receivers (RF-3590/3595 family, SRR-1700/SRR-2100 series) offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates (typically up to 8–50 MHz instantaneous bandwidth) The data is stored in a proprietary WIFS container (.wfs/.wif2) or a straight binary dump (.iq/.dat). 
 
 ### WIFS Container Format (.wfs / .wif2)
 The Waveform Information File System (WIFS) wraps raw samples with metadata in a structured header.
@@ -119,7 +119,9 @@ There are additional functions to handle other data types which are also availab
 
 https://github.com/adamgann/matlab_utils/tree/master
 
-Additional details on interoperating our covered here:
+Additional details on interoperating are covered here:
+
+https://adamgannon.com/2014/11/18/gnuradio_offline_pt1/
 
 The RF Toolbox is commonly used in MATLAB to work with RF signals
 
@@ -244,6 +246,4 @@ https://pysdr.org/content/iq_files.html
 
 https://wiki.gnuradio.org/index.php/IQ_Complex_Tutorial
 
-*Page Updated - September 18 2025*
-
-
+*Page Updated - September 19 2025*
