@@ -73,7 +73,7 @@ The Waveform Information File System (WIFS) wraps raw samples with metadata in a
 
 | Section       | Size (bytes) | Description                               |
 |--------------:|-------------:|-------------------------------------------|
-| Magic ID      |            8 | ASCII "WIFSv1\0" or "WIFSv2\0"           |
+| Magic ID      |            8 | ASCII `WIFSv1\0` or `WIFSv2\0`            |
 | Header Len    |            4 | Total header length (including this)      |
 | Timestamp     |            8 | GPS epoch (µs since 1970-01-01)           |
 | CenterFreq    |            8 | Hz (double-precision float)               |
@@ -95,7 +95,7 @@ WIFSv2 adds:
 
 ### Raw Binary Dump Format (.iq / .dat)
 
-The  Raw Binary Dump Format is consecutive I/Q pairs. It is usually 16-bit signed, little-endian by default. The SampleRate and byte-order must be known externally. The file naming often mirrors WIFS naming but with `.iq` suffix
+The  Raw Binary Dump Format is consecutive I/Q pairs. It is usually 16-bit signed, little-endian by default. The SampleRate and byte-order must be known externally. The file naming often mirrors WIFS naming but with `.iq` suffix.
 
 Filename template: `<MODEL>_<SRATE>_<YYYYMMDD>_<HHMMSS>[_segXX].wfs`
 
@@ -170,13 +170,13 @@ https://community.libre.space/
 
 ### SigMF Converter
 
-SigMF Converter is an online file converter designed to convert various file formats to the SigMF format. It supports the following formats:
+SigMF Converter is an online tool for converting various signal file formats to the SigMF standard. It supports the following formats:
 
  * `*.vita49` - Vita49 recordings
  
  * `*.wav` (Audio format)
 
-The SigMF Converter  outputs:
+The SigMF Converter outputs:
 
 * `*.sigmf-meta, *.sigmf-data` - SigMF recordings
  
