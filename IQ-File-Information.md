@@ -18,6 +18,10 @@ SigMF is a Python library for working with radio recordings in .sigmf format acc
 
 https://sigmf.readthedocs.io/en/latest/index.html#
 
+### libsigmf 
+
+https://github.com/deepsig/libsigmf
+
 ### gr-sigmf
 
 An older OOT module for sigmf. This module contains blocks to read from and write to SigMF (the Signal Metadata Format) recordings in GNU Radio.
@@ -141,7 +145,10 @@ Additional details on interoperating are covered here.
 
 https://adamgannon.com/2014/11/18/gnuradio_offline_pt1/
 
-*Includes Metadata: No*
+MATLAB - comm.BasebandFileReader
+
+https://www.mathworks.com/help/comm/ref/comm.basebandfilereader-system-object.html
+
 
 ## GPS Global Navigation Satellite System (GNSS) Software Defined Receiver Metadata Standard
 
