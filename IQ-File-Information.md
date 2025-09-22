@@ -66,6 +66,8 @@ https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-appl
 
 Rockwell Collins’ tactical signal receivers (RF-3590/3595 family, SRR-1700/SRR-2100 series) offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates (typically up to 8–50 MHz instantaneous bandwidth) The data is stored in a proprietary WIFS container (.wfs/.wif2) or a straight binary dump (.iq/.dat). 
 
+*Note the following information is AI generated and not confirmed.*
+
 ### WIFS Container Format (.wfs / .wif2)
 The Waveform Information File System (WIFS) wraps raw samples with metadata in a structured header.
 
