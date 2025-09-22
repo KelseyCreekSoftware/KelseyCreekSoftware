@@ -220,6 +220,11 @@ Inspectrum supports the following file types:
  * `*.s8` - Real 8-bit signed integer samples
  * `*.u8` - Real 8-bit unsigned integer samples
 
+### Csdr
+
+Csdr, it can convert a real/complex stream from one data format to another, to interface it with other SDR tools and the sound card.
+
+https://github.com/ha7ilm/csdr
 
 ### WaveTrap
 
@@ -249,4 +254,4 @@ https://pysdr.org/content/iq_files.html
 
 https://wiki.gnuradio.org/index.php/IQ_Complex_Tutorial
 
-*Page Updated - September 19 2025*
+*Page Updated - September 22 2025*
