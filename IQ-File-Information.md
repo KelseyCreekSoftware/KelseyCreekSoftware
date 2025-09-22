@@ -105,9 +105,19 @@ https://en.wikipedia.org/wiki/WAV
 
 ## KeySight - Spectrum Analysis IQ File
 
-Pending research.
+### IQ Baseband File Formats Used by Keysight Spectrum Analyzers
 
-*Includes Metadata: No*
+Keysight instruments (like the MXA, EXA, and PXA series) and software (such as Keysight VSA and 89600 VSA) support several formats for saving IQ baseband data. These formats vary by instrument, software version, and export method.
+
+### Common Keysight IQ File Formats 
+
+- `.bin`, `.iq` – Raw binary IQ data, often 16-bit signed integers, interleaved I/Q pairs. Typically lacks embedded metadata; parameters like sample rate and center frequency must be known externally.
+May be paired with a separate config or XML file.
+- `.mat` – MATLAB format used for post-processing and visualization of IQ samples. May include structured variables for IQ data and limited metadata depending on export settings.
+- `.csv` – Text-based format with I/Q samples in separate columns. Metadata is rarely embedded but might be inferred from headers or filenames.
+- `.tdms` – NI TDMS format occasionally used in Keysight workflows; supports structured metadata and time-series data.
+- `.vsa`	VSA Archive	Proprietary container used by 89600 VSA software.	Requires Keysight software to extract
+- `.h5` HDF5		Hierarchical format used in some Keysight workflows.	Metadata support.
 
 ## MATLAB
 
@@ -253,5 +263,9 @@ https://pysdr.org/content/iq_files.html
 ### GNU Radio IQ Complex Tutorial
 
 https://wiki.gnuradio.org/index.php/IQ_Complex_Tutorial
+
+### PEØSAT IQ Data Explained
+
+https://www.pe0sat.vgnet.nl/sdr/iq-data-explained/
 
 *Page Updated - September 22 2025*
