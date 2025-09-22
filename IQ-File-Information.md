@@ -64,34 +64,7 @@ https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-appl
 
 ## Rockwell Collins
 
-Rockwell Collins’ tactical signal receivers (RF-3590/3595 family, SRR-1700/SRR-2100 series) offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates (typically up to 8–50 MHz instantaneous bandwidth) The data is stored in a proprietary WIFS container (.wfs/.wif2) or a straight binary dump (.iq/.dat). 
-
-*Note the following information is AI generated and not confirmed.*
-
-### WIFS Container Format (.wfs / .wif2)
-The Waveform Information File System (WIFS) wraps raw samples with metadata in a structured header.
-
-| Section       | Size (bytes) | Description                               |
-|--------------:|-------------:|-------------------------------------------|
-| Magic ID      |            8 | ASCII `WIFSv1\0` or `WIFSv2\0`            |
-| Header Len    |            4 | Total header length (including this)      |
-| Timestamp     |            8 | GPS epoch (µs since 1970-01-01)           |
-| CenterFreq    |            8 | Hz (double-precision float)               |
-| SampleRate    |            8 | Samples/sec (double-precision float)      |
-| NumChannels   |            2 | Always 2 (I & Q)                          |
-| BitsPerSam    |            2 | 16 or 32                                  |
-| ByteOrder     |            1 | 0 = little-endian; 1 = big-endian         |
-| Metadata Fields |	Variable	  | Gain, filter BW, receiver serial/model, segment idx… |
-| Padding       | (N)  to reach Header Len | Alignment to 512-byte boundary            |
-| Data          | variable    | Interleaved I/Q samples - I₀,Q₀,I₁,Q₁,…      |
-
-WIFSv2 adds:
-
-- Digital signature block for authenticated capture
-- Extended metadata fields (e.g., operator ID, GPS fix quality)
-- Optional compression flag (LZ4)
-
-*Includes Metadata: Yes*
+Rockwell Collins’ tactical signal receivers offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates. The data is stored in a proprietary container or a straight binary dump (.iq/.dat).
 
 ### Raw Binary Dump Format (.iq / .dat)
 
