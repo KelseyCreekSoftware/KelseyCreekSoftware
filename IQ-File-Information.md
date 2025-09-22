@@ -111,24 +111,27 @@ Pending research.
 
 ## MATLAB
 
-There are several MATLAB files distributed with GNU Radio to handle writing to files from MATLAB / Octave. 
+For an overview of IQ file encoding and MATLAB, refer to the PySDR topic.
 
-https://github.com/gnuradio/gnuradio/tree/master/gr-utils/octave
-
-There are additional functions to handle other data types which are also available in the GitHub repository.
-
-https://github.com/adamgann/matlab_utils/tree/master
-
-Additional details on interoperating are covered here:
-
-https://adamgannon.com/2014/11/18/gnuradio_offline_pt1/
+https://pysdr.org/content/iq_files.html#coming-from-matlab
 
 The RF Toolbox is commonly used in MATLAB to work with RF signals
 
 https://www.mathworks.com/help/rf/getting-started.html
 
-*Includes Metadata: No*
+There are several MATLAB files distributed with GNU Radio to handle writing to files from MATLAB / Octave. 
 
+https://github.com/gnuradio/gnuradio/tree/master/gr-utils/octave
+
+There are additional functions to handle other data types which are also available in this GitHub repository from Adam Gannon.
+
+https://github.com/adamgann/matlab_utils/tree/master
+
+Additional details on interoperating are covered here.
+
+https://adamgannon.com/2014/11/18/gnuradio_offline_pt1/
+
+*Includes Metadata: No*
 
 ## GPS Global Navigation Satellite System (GNSS) Software Defined Receiver Metadata Standard
 
