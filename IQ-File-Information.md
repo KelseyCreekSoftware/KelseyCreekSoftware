@@ -1,4 +1,4 @@
-# IQ File Format Information
+# RF Baseband IQ File Format Information
 
 This document summarizes key formats, standards, and tools related to IQ file handling and metadata. These formats can be evaluated and stack ranked for possible import into SigMF.
 
@@ -28,29 +28,19 @@ An older OOT module for sigmf. This module contains blocks to read from and writ
 
 https://github.com/skysafe/gr-sigmf
 
-## SigMF-NS-NTIA
+## RedWing Blue format files 
 
-This Signal Metadata Format SigMF namespace extension describes the National Telecommunications and Information Administration (NTIA)'s open data format for recorded signal datasets.
+BlueFiles are a proprietary file format developed by RedWing Technologies and used primarily by Signal Processing Workstation (SPW) and similar tools for RF and digital signal processing (DSP) data storage.
 
-https://github.com/NTIA/sigmf-ns-ntia/
+This MATLAB class is a utility to progressively read through BLUE format files.
 
-*Includes Metadata: Yes*
+https://github.com/Geontech/XMidasBlueReader/
 
-## VITA
+REDHAWK is a software-defined radio (SDR) framework designed to support the development, deployment, and management of real-time software radio applications.
 
-### VITA 49.2-2017
+It includes libaries such as blueFileLib.
 
-The ANSI/VITA 49.2 standard, which is part of the VITA Radio Transport (VRT) family of standards, defines a signal/spectrum protocol that expresses spectrum observation, spectrum operations, and capabilities of RF devices. 
-
-https://www.vita.com/page-1855484
-
-*Includes Metadata: Yes*
-
-## HDF5
-
-ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with the intention of spectrum monitoring. Key Bridge Wireless supports the ITU in creating a library for the data format as a contribution to IEEE 1900.8 Working Group. This is an HDF5 read-write Python library for the data format in Recommendation ITU-R SM.2117-0.
-
-https://pypi.org/project/itusm2117/
+https://github.com/RedhawkSDR/blueFileLib/blob/develop-2.0/cpp/src/HeaderControlBlock.cc
 
 ## Rohde and Schwarz - I/Q Data File Format (iq-tar)
  
@@ -61,26 +51,6 @@ https://pypi.org/project/itusm2117/
 https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
 
 *Includes Metadata: Yes*
-
-## Rockwell Collins
-
-Rockwell Collins’ tactical signal receivers offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates. The data is stored in a proprietary container or a straight binary dump (.iq/.dat).
-
-### Raw Binary Dump Format (.iq / .dat)
-
-The  Raw Binary Dump Format is consecutive I/Q pairs. It is usually 16-bit signed, little-endian by default. The SampleRate and byte-order must be known externally. The file naming often mirrors WIFS naming but with `.iq` suffix.
-
-Filename template: `<MODEL>_<SRATE>_<YYYYMMDD>_<HHMMSS>[_segXX].wfs`
-
-*Includes Metadata: No*
-
-## WAV Audio Files
-
-WAV audio files are used to store audio signals.  The most common WAV audio format is uncompressed audio in the linear pulse-code modulation (LPCM) format. LPCM is also the standard audio coding format for audio CDs, which store two-channel LPCM audio sampled at 44.1 kHz with 16 bits per sample.
-
-https://en.wikipedia.org/wiki/WAV
-
-*Includes Metadata: No*
 
 ## KeySight - Spectrum Analysis IQ File
 
@@ -124,6 +94,49 @@ MATLAB - comm.BasebandFileReader
 
 https://www.mathworks.com/help/comm/ref/comm.basebandfilereader-system-object.html
 
+## SigMF-NS-NTIA
+
+This Signal Metadata Format SigMF namespace extension describes the National Telecommunications and Information Administration (NTIA)'s open data format for recorded signal datasets.
+
+https://github.com/NTIA/sigmf-ns-ntia/
+
+*Includes Metadata: Yes*
+
+## VITA
+
+### VITA 49.2-2017
+
+The ANSI/VITA 49.2 standard, which is part of the VITA Radio Transport (VRT) family of standards, defines a signal/spectrum protocol that expresses spectrum observation, spectrum operations, and capabilities of RF devices. 
+
+https://www.vita.com/page-1855484
+
+*Includes Metadata: Yes*
+
+## HDF5
+
+ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with the intention of spectrum monitoring. Key Bridge Wireless supports the ITU in creating a library for the data format as a contribution to IEEE 1900.8 Working Group. This is an HDF5 read-write Python library for the data format in Recommendation ITU-R SM.2117-0.
+
+https://pypi.org/project/itusm2117/
+
+## Rockwell Collins
+
+Rockwell Collins’ tactical signal receivers offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates. The data is stored in a proprietary container or a straight binary dump (.iq/.dat).
+
+### Raw Binary Dump Format (.iq / .dat)
+
+The  Raw Binary Dump Format is consecutive I/Q pairs. It is usually 16-bit signed, little-endian by default. The SampleRate and byte-order must be known externally. The file naming often mirrors WIFS naming but with `.iq` suffix.
+
+Filename template: `<MODEL>_<SRATE>_<YYYYMMDD>_<HHMMSS>[_segXX].wfs`
+
+*Includes Metadata: No*
+
+## WAV Audio Files
+
+WAV audio files are used to store audio signals.  The most common WAV audio format is uncompressed audio in the linear pulse-code modulation (LPCM) format. LPCM is also the standard audio coding format for audio CDs, which store two-channel LPCM audio sampled at 44.1 kHz with 16 bits per sample.
+
+https://en.wikipedia.org/wiki/WAV
+
+*Includes Metadata: No*
 
 ## GPS Global Navigation Satellite System (GNSS) Software Defined Receiver Metadata Standard
 
