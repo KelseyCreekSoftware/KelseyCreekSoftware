@@ -28,9 +28,9 @@ An older OOT module for sigmf. This module contains blocks to read from and writ
 
 https://github.com/skysafe/gr-sigmf
 
-## RedWing Blue format files 
+## XMidas Blue format files 
 
-BlueFiles are a proprietary file format developed by RedWing Technologies and used primarily by Signal Processing Workstation (SPW) and similar tools for RF and digital signal processing (DSP) data storage.
+BlueFiles are a file format developed for RF and digital signal processing (DSP) data storage.
 
 This MATLAB class is a utility to progressively read through BLUE format files.
 
