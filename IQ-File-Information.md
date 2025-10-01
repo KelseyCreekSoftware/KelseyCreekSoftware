@@ -22,6 +22,12 @@ https://sigmf.readthedocs.io/en/latest/index.html#
 
 https://github.com/deepsig/libsigmf
 
+### gr-sigmf_utils
+
+Utilities for working with SigMF and GNU Radio - Jacob Gilbert. 
+
+https://github.com/jacobagilbert/gr-sigmf_utils/blob/main/README.md
+
 ### gr-sigmf
 
 An older OOT module for sigmf. This module contains blocks to read from and write to SigMF (the Signal Metadata Format) recordings in GNU Radio.
@@ -259,8 +265,22 @@ https://pysdr.org/content/iq_files.html
 
 https://wiki.gnuradio.org/index.php/IQ_Complex_Tutorial
 
+### SigMF - Talks
+
+Signal Metadata Format (SigMF) Workshop (January 2022)
+
+https://www.youtube.com/watch?v=AVdnP-0uBkE
+
+libsigmf: Human Tools for Extra-Terrestrial and AI Radios - FOSDEM
+
+https://www.youtube.com/watch?v=gXZQY4okDPw&t=54s
+
+Marc Lichtman - SigMF update GRCon24
+
+https://www.youtube.com/watch?v=NiUy6Gnka3w
+
 ### PEØSAT IQ Data Explained
 
 https://www.pe0sat.vgnet.nl/sdr/iq-data-explained/
 
-*Page Updated - September 22 2025*
+*Page Updated - October 1 2025*
