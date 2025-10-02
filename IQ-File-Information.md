@@ -262,6 +262,12 @@ Artemis is a software designed to assist radio frequency (RF) signal identificat
 
 https://www.aresvalley.com/
 
+### Inspectrum with SigMF Files
+
+Blog Post describing setting up Inspectrum with SigMF Files
+
+https://www.jjhorton.co.uk/posts/inspectrumsigmf/
+
 ## References and background information
 
 ### IQ Files and SigMF
