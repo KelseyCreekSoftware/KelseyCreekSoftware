@@ -42,11 +42,24 @@ This MATLAB class is a utility to progressively read through BLUE format files.
 
 https://github.com/Geontech/XMidasBlueReader/
 
+### REDHAWK
+
 REDHAWK is a software-defined radio (SDR) framework designed to support the development, deployment, and management of real-time software radio applications.
 
 It includes libaries such as blueFileLib.
 
 https://github.com/RedhawkSDR/blueFileLib/blob/develop-2.0/cpp/src/HeaderControlBlock.cc
+
+It is possible to intergrate REDHAWK with GNURadio. A GNURadio Convention 2017 (GRCon 2017) talk provided information on this integration.
+
+https://github.com/geontech/gnuradio-redhawk
+
+### XMidasBlueReader
+
+This MATLAB class is a utility to progressively read through BLUE format files.
+
+https://github.com/Geontech/XMidasBlueReader/
+
 
 ## Rohde and Schwarz - I/Q Data File Format (iq-tar)
  
@@ -185,12 +198,6 @@ After exporting raw I/Q via MATLAB or Python, use the sigmf CLI (pip install sig
 The MISP SigMF module expands a SigMF Recording object into a SigMF Expanded Recording object, and extracts a SigMF archive into a SigMF Recording object.
 
 https://github.com/MISP/misp-modules/blob/main/misp_modules/modules/expansion/sigmf_expand.py
-
-### XMidasBlueReader
-
-This MATLAB class is a utility to progressively read through BLUE format files.
-
-https://github.com/Geontech/XMidasBlueReader/
 
 ### Rohde and Schwarz I/Q Data Import Export library (daiex)
 
