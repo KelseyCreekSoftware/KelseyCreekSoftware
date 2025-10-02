@@ -1,7 +1,7 @@
 - 👋 Hi, I’m @KelseyCreekSoftware
 - 👀 I’m interested in GnuRadio
 - 🌱 I’m currently learning SNR measurment
-- Just started working on SigMF - [IQ-File-Information.md]()
+- Just started working on SigMF - [RF baseband IQ samples file formats](IQ-File-Information.md)
 
 ## Links to SDR Topics
 
