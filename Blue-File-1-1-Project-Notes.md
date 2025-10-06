@@ -10,6 +10,11 @@ The 1.1 spec is available here.
 
 https://web.archive.org/web/20150413061156/http://nextmidas.techma.com/nm/nxm/sys/docs/MidasBlueFileFormat.pdf
 
+For a handy html listing of the blue file elements.
+
+- https://sigplot.lgsinnovations.com/html/doc/bluefile.html
+- http://nextmidas.techma.com/nm/htdocs/usersguide/BlueFiles.html
+
 ## Goal
 
 Create a pyton script similar to this file to covert Blue 1.1 files to SigMF
@@ -139,4 +144,197 @@ ToDo - Determine version
  | 32     |ydelta |  8   |real_8| Increment between frames             |
  | 36     |yunits |  4   |int_4 | Abscissa (row) unit code             |
 
+## Python code scratch pad
 
+*This code is under development and is not complete*
+
+### ExtendedHeader
+
+```python
+    @staticmethod
+    def ExtendedHeader(f, hcb):
+        """Read the extended header structure."""
+        if f is None:
+            return []
+
+        # Move read pointer to ext_start * 512
+        f.seek(hcb["ext_start"] * 512, os.SEEK_SET)
+
+        ext_header = []
+        bytesRemaining = hcb["ext_size"]
+
+        while bytesRemaining > 0:
+            # Read fixed fields
+            lkey = struct.unpack("<i", f.read(4))[0]   # int32
+            lext = struct.unpack("<h", f.read(2))[0]   # int16
+            ltag = struct.unpack("<b", f.read(1))[0]   # int8
+            type_char = f.read(1).decode("ascii")
+
+            # Value type and size
+            valType, valTypeBytes = XMidasBlueReader.FormatType(type_char)
+            valCount = (lkey - lext) // valTypeBytes
+
+            # Read values
+            if valCount > 0:
+                values = np.fromfile(f, dtype=np.dtype(valType), count=valCount)
+            else:
+                values = np.array([])
+
+            # Read tag
+            tag = f.read(ltag).decode("ascii") if ltag > 0 else ""
+
+            key = {
+                "lkey": lkey,
+                "lext": lext,
+                "ltag": ltag,
+                "type": type_char,
+                "value": values,
+                "tag": tag,
+            }
+
+            # Align to 8-byte boundary
+            total = 4 + 2 + 1 + 1 + (lkey - lext) + ltag
+            remainder = (8 - (total % 8)) % 8
+            if remainder > 0:
+                f.seek(remainder, os.SEEK_CUR)
+
+            bytesRemaining -= lkey
+            ext_header.append(key)
+
+        return ext_header
+```
+
+### FormatType
+
+```python
+    @staticmethod
+    def FormatType(formatType):
+        """Convert format type character to numpy dtype and size in bytes."""
+        mapping = {
+            "B": ("int8", 1),
+            "I": ("int16", 2),
+            "L": ("int32", 4),
+            "X": ("int64", 8),
+            "F": ("float32", 4),
+            "D": ("float64", 8),
+            "A": ("S1", 1),  # ASCII char
+        }
+        if formatType not in mapping:
+            raise ValueError(f"Unsupported HCB format type: {formatType}")
+        return mapping[formatType]
+```
+
+### FormatSize
+
+```python
+    @staticmethod
+    def FormatSize(formatSize):
+        """Convert HCB format size character to number of elements per sample."""
+        mapping = {
+            "S": 1,
+            "C": 2,
+            "V": 3,
+            "Q": 4,
+            "M": (3, 3),
+            "T": (4, 4),
+            "1": 1,
+            "2": 2,
+            "3": 3,
+            "4": 4,
+            "5": 5,
+            "6": 6,
+            "7": 7,
+            "8": 8,
+            "9": 9,
+            "X": 10,
+            "A": 32,
+        }
+        if formatSize not in mapping:
+            raise ValueError(f"Unsupported HCB format size: {formatSize}")
+        return mapping[formatSize]
+```
+
+### 
+
+```python
+# xmidas_blue_reader.py
+import os
+import struct
+import numpy as np
+from typing import Any, Dict, List, Tuple, Union
+
+class XMidasBlueReader:
+    """
+    XMidasBlueReader: Read X-Midas BLUE file (Python port of MATLAB class).
+    """
+
+    def __init__(self, bluefile: str, endian: str = "<"):
+        """
+        Initialize the reader, parse headers, and set the read pointer.
+
+        - bluefile: path to the BLUE file
+        - endian: struct unpack endianness, "<" for little-endian, ">" for big-endian
+        """
+        self.bluefile = bluefile
+        self.endian = endian  # used for struct.unpack of HCB and extended header
+        self.hcb: Dict[str, Any] = {}
+        self.ext_header: List[Dict[str, Any]] = []
+        self.dataOffset: int = 0
+
+        with open(self.bluefile, "rb") as f:
+            self.hcb = self.HCB(f, self.endian)
+            self.ext_header = self.ExtendedHeader(f, self.hcb, self.endian)
+            self.resetRead()
+
+    def read(self, numSamples: int = 1) -> Union[np.ndarray, np.complex128]:
+        """
+        Read numSamples from the current data position.
+        Returns:
+          - For scalar/real types: array shape (numSamples,)
+          - For complex 'C': complex array shape (numSamples,)
+          - For vector/matrix sizes: array shape (elementsPerSample, numSamples)
+            where elementsPerSample = prod(size) for matrices.
+        """
+        if numSamples <= 0:
+            return np.array([])
+
+        with open(self.bluefile, "rb") as f:
+            f.seek(int(self.dataOffset), os.SEEK_SET)
+
+            fmt_size_char = self.hcb["format"][0]  # size code
+            fmt_type_char = self.hcb["format"][1]  # type code
+
+            elementsPerSample = self.FormatSize(fmt_size_char)
+            elem_count_per_sample = (
+                np.prod(elementsPerSample) if isinstance(elementsPerSample, (tuple, list)) else elementsPerSample
+            )
+
+            dtype_str, elem_bytes = self.FormatType(fmt_type_char)
+            bytesPerSample = int(elem_bytes) * int(elem_count_per_sample)
+
+            bytesRead = int(self.dataOffset - self.hcb["data_start"])
+            bytesRemaining = int(self.hcb["data_size"] - bytesRead)
+
+            if bytesPerSample * numSamples > bytesRemaining:
+                raise ValueError(
+                    f"Requested read longer than remaining: {bytesPerSample * numSamples} vs {bytesRemaining}"
+                )
+
+            # Read raw elements, then reshape into [elem_count_per_sample, numSamples] in column-major (Fortran) order
+            total_elems = int(elem_count_per_sample) * int(numSamples)
+
+            # Build numpy dtype with endianness for numeric types
+            # For string/char ('A' → 'S1'), endianness is irrelevant.
+            dtype = np.dtype(dtype_str)
+            if dtype_str not in ("S1",) and self.endian in ("<", ">"):
+                dtype = dtype.newbyteorder(self.endian)
+
+
+
+
+```
+
+### 
+```python
+
+```
