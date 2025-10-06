@@ -36,7 +36,18 @@ https://github.com/skysafe/gr-sigmf
 
 ## XMidas Blue format files 
 
-BlueFiles are a file format developed for RF and digital signal processing (DSP) data storage. For more information, see  [blue file project notes](Blue-File-1-1-Project-Notes.md).
+BlueFiles are a file format developed for RF and digital signal processing (DSP) data storage. 
+
+### Blue file version information 
+
+- Gold (original, deprecated)
+- BLUE 1.0
+- BLUE 1.1 (current community standard)
+- BLUE 2.0 / Platinum (a stricter variant / branch of BLUE)
+
+(Within BLUE / Platinum, internal subtypes (TYPE = 1999, 2000, 3000, 4000, 5000, 6000))
+
+For more information, see  [blue file project notes](Blue-File-1-1-Project-Notes.md).
 
 ## Rohde and Schwarz - I/Q Data File Format (iq-tar)
  
