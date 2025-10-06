@@ -1,5 +1,15 @@
 # MIDIS Blue File Project Notes
 
+## Overview
+
+For an overview of the Midas Blue file format, refer to this topic in PySDR.
+
+https://pysdr.org/content/iq_files.html#midas-blue-file-format
+
+The 1.1 spec is available here.
+
+https://web.archive.org/web/20150413061156/http://nextmidas.techma.com/nm/nxm/sys/docs/MidasBlueFileFormat.pdf
+
 ## Goal
 
 Create a pyton script similar to this file to covert Blue 1.1 files to SigMF
@@ -20,6 +30,60 @@ https://github.com/IQEngine/IQEngine/blob/main/api/converters/vita49_to_sigmf/vi
 
 (Within BLUE / Platinum, internal subtypes (TYPE = 1999, 2000, 3000, 4000, 5000, 6000))
 
+## Tools and input streams
+
+### XMidasBlueReader
+
+This MATLAB class is a utility to progressively read through BLUE format files.
+
+https://github.com/Geontech/XMidasBlueReader/
+
+### RUST BlueJay reader
+
+https://docs.rs/crate/bluefile/latest/source/src/bluejay.rs
+
+#### 1.1 Blue test resource files
+
+https://docs.rs/crate/bluefile/latest/source/resources/test/
+
+```
+Format-Hex sin.tmp
+Path:
+C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\bluefile-main\bluefile-main\resources\test\sin.tmp
+
+           00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+
+00000000   42 4C 55 45 45 45 45 49 45 45 45 49 00 00 00 00  BLUEEEEIEEEI....
+00000010   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000020   00 00 00 00 00 00 80 40 00 00 00 00 00 00 E0 40  ......@......à@
+00000030   E8 03 00 00 53 44 00 00 00 00 00 00 00 00 00 00  è...SD..........
+00000040   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000050   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000060   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000070   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000080   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000090   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+000000A0   13 00 00 00 56 45 52 3D 31 2E 31 00 49 4F 3D 58  ....VER=1.1.IO=X
+000000B0   2D 4D 69 64 61 73 00 20 20 20 20 20 20 20 20 20  -Midas.
+```
+
+### Spectere
+
+3db labs provides signal processing and analysis software such as Sceptre that saves IQ signals.
+
+https://3db-labs.com/support/#customer-support
+
+### REDHAWK
+
+REDHAWK is a software-defined radio (SDR) framework designed to support the development, deployment, and management of real-time software radio applications.
+
+It includes libaries such as blueFileLib.
+
+https://github.com/RedhawkSDR/blueFileLib/blob/develop-2.0/cpp/src/HeaderControlBlock.cc
+
+It is possible to intergrate REDHAWK with GNURadio. A GNURadio Convention 2017 (GRCon 2017) talk provided information on this integration.
+
+https://github.com/geontech/gnuradio-redhawk
 
 ### Blue file field information 
 
@@ -74,37 +138,5 @@ ToDo - Determine version
  | 24     |ystart |  8   |real_8| Abscissa (row) start                 |
  | 32     |ydelta |  8   |real_8| Increment between frames             |
  | 36     |yunits |  4   |int_4 | Abscissa (row) unit code             |
-
-
-
-## Tools and input streams
-
-### XMidasBlueReader
-
-This MATLAB class is a utility to progressively read through BLUE format files.
-
-https://github.com/Geontech/XMidasBlueReader/
-
-
-### Spectere
-
-3db labs provides signal processing and analysis software such as Sceptre that saves IQ signals.
-
-https://3db-labs.com/support/#customer-support
-
-### REDHAWK
-
-REDHAWK is a software-defined radio (SDR) framework designed to support the development, deployment, and management of real-time software radio applications.
-
-It includes libaries such as blueFileLib.
-
-https://github.com/RedhawkSDR/blueFileLib/blob/develop-2.0/cpp/src/HeaderControlBlock.cc
-
-It is possible to intergrate REDHAWK with GNURadio. A GNURadio Convention 2017 (GRCon 2017) talk provided information on this integration.
-
-https://github.com/geontech/gnuradio-redhawk
-
-
-
 
 
