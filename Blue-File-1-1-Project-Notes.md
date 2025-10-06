@@ -72,6 +72,33 @@ C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\bluefile-main\bluefile-m
 000000B0   2D 4D 69 64 61 73 00 20 20 20 20 20 20 20 20 20  -Midas.
 ```
 
+###  Tektronix RSA7100A
+
+Tektronix, RSA7100A spectrum analyzer supports the Midas 2.0 (Platinum BLUE) format, with and without an embedded header.
+ 
+.cdif
+
+This combined file contains header and IF samples (IQ samples for the RSA7100A) in Midas 2.0 (Platinum BLUE) format.
+
+.cdif + .det (or .det12)
+
+This is a separate header (.cdif) file and an IF sample (IQ sample for  RSA7100A)
+ 
+
+### SignalHound
+ 
+The SignalHound Software just supports the loading of this type of Midas Blue file. 
+ 
+The file extension for these files should be .tmp or .prm. 
+
+Only files that have these characteristics can be loaded properly.  
+- Little endian headers and data 
+- Cannot be detached 
+- Must be 1D complex data (type code 1000) 
+- Must have data_format of ‘F’, ‘D’, or ‘I’ 
+- Sample rate is retrieved from VariableHeader.x_delta.  
+
+
 ### Spectere
 
 3db labs provides signal processing and analysis software such as Sceptre that saves IQ signals.
