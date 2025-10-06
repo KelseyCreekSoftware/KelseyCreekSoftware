@@ -2,6 +2,7 @@
 - 👀 I’m interested in GNURadio
 - 🌱 I’m currently learning about IQ file formats
 - Just started working on SigMF - [RF baseband IQ samples file formats](IQ-File-Information.md)
+- Here are some [project notes](Blue-File-1-1-Project-Notes)
 
 ## Links to SDR Topics
 
