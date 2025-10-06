@@ -355,13 +355,189 @@ class XMidasBlueReader:
             dtype = np.dtype(dtype_str)
             if dtype_str not in ("S1",) and self.endian in ("<", ">"):
                 dtype = dtype.newbyteorder(self.endian)
-
-
-
-
 ```
 
-### 
-```python
+### Blue File Reader - Port of MATLAB class
 
+```python
+# xmidas_blue_reader.py
+import os
+import struct
+import numpy as np
+from typing import Any, Dict, List, Tuple, Union
+
+class XMidasBlueReader:
+    """
+    XMidasBlueReader: Read X-Midas BLUE file (Python port of MATLAB class).
+    """
+
+    def __init__(self, bluefile: str, endian: str = "<"):
+        """
+        Initialize the reader, parse headers, and set the read pointer.
+
+        - bluefile: path to the BLUE file
+        - endian: struct unpack endianness, "<" for little-endian, ">" for big-endian
+        """
+        self.bluefile = bluefile
+        self.endian = endian
+        self.hcb: Dict[str, Any] = {}
+        self.ext_header: List[Dict[str, Any]] = []
+        self.dataOffset: int = 0
+
+        with open(self.bluefile, "rb") as f:
+            self.hcb = self.HCB(f, self.endian)
+            self.ext_header = self.ExtendedHeader(f, self.hcb, self.endian)
+            self.resetRead()
+
+    # ------------------------------------------------------------------
+    # Instance methods
+    # ------------------------------------------------------------------
+
+    def read(self, numSamples: int = 1) -> np.ndarray:
+        """Read numSamples from the current data position."""
+        if numSamples <= 0:
+            return np.array([])
+
+        with open(self.bluefile, "rb") as f:
+            f.seek(int(self.dataOffset), os.SEEK_SET)
+
+            fmt_size_char = self.hcb["format"][0]
+            fmt_type_char = self.hcb["format"][1]
+
+            elementsPerSample = self.FormatSize(fmt_size_char)
+            elem_count_per_sample = (
+                np.prod(elementsPerSample) if isinstance(elementsPerSample, (tuple, list)) else elementsPerSample
+            )
+
+            dtype_str, elem_bytes = self.FormatType(fmt_type_char)
+            bytesPerSample = int(elem_bytes) * int(elem_count_per_sample)
+
+            bytesRead = int(self.dataOffset - self.hcb["data_start"])
+            bytesRemaining = int(self.hcb["data_size"] - bytesRead)
+
+            if bytesPerSample * numSamples > bytesRemaining:
+                raise ValueError(
+                    f"Requested read longer than remaining: {bytesPerSample * numSamples} vs {bytesRemaining}"
+                )
+
+            total_elems = int(elem_count_per_sample) * int(numSamples)
+            dtype = np.dtype(dtype_str)
+            if dtype_str not in ("S1",) and self.endian in ("<", ">"):
+                dtype = dtype.newbyteorder(self.endian)
+
+            samples = np.fromfile(f, dtype=dtype, count=total_elems)
+            if samples.size != total_elems:
+                raise EOFError("Unexpected end of file while reading samples.")
+
+            samples = samples.reshape((int(elem_count_per_sample), int(numSamples)), order="F")
+
+            if fmt_size_char == "C":
+                samples = samples[0, :] + 1j * samples[1, :]
+            elif isinstance(elementsPerSample, (tuple, list)):
+                rows, cols = elementsPerSample
+                samples = samples.reshape((rows * cols, numSamples), order="F")
+
+            self.dataOffset += bytesPerSample * numSamples
+            return samples
+
+    def resetRead(self) -> None:
+        """Reset the internal read pointer to the start of data."""
+        self.dataOffset = int(self.hcb["data_start"])
+
+    def rewind(self, numSamples: int = None) -> None:
+        """Move the data playback backwards by numSamples."""
+        if numSamples is None:
+            self.resetRead()
+            return
+
+        fmt_size_char = self.hcb["format"][0]
+        fmt_type_char = self.hcb["format"][1]
+
+        elementsPerSample = self.FormatSize(fmt_size_char)
+        elem_count_per_sample = (
+            np.prod(elementsPerSample) if isinstance(elementsPerSample, (tuple, list)) else elementsPerSample
+        )
+        _, elem_bytes = self.FormatType(fmt_type_char)
+        bytesPerSample = int(elem_bytes) * int(elem_count_per_sample)
+
+        moveBytes = bytesPerSample * numSamples
+        self.dataOffset = max(self.dataOffset - moveBytes, int(self.hcb["data_start"]))
+
+    def begin(self) -> bool:
+        return int(self.dataOffset) == int(self.hcb["data_start"])
+
+    def end(self) -> bool:
+        return int(self.dataOffset) == int(self.hcb["data_start"] + self.hcb["data_size"])
+
+    # ------------------------------------------------------------------
+    # Static helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def HCB(f, endian: str = "<") -> Dict[str, Any]:
+        """Read the HCB (header control block) structure."""
+        f.seek(0, os.SEEK_SET)
+
+        hcb: Dict[str, Any] = {}
+        hcb["version"] = f.read(4).decode("ascii", errors="replace")
+        hcb["head_rep"] = f.read(4).decode("ascii", errors="replace")
+        hcb["data_rep"] = f.read(4).decode("ascii", errors="replace")
+
+        hcb["detached"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["protected"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["pipe"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["ext_start"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["ext_size"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["data_start"] = struct.unpack(f"{endian}d", f.read(8))[0]
+        hcb["data_size"] = struct.unpack(f"{endian}d", f.read(8))[0]
+        hcb["type"] = struct.unpack(f"{endian}i", f.read(4))[0]
+
+        if hcb["type"] not in (1000, 2000):
+            raise ValueError(f"Unsupported HCB.type: {hcb['type']}")
+
+        hcb["format"] = f.read(2).decode("ascii", errors="replace")
+        hcb["flagmask"] = struct.unpack(f"{endian}h", f.read(2))[0]
+        hcb["timecode"] = struct.unpack(f"{endian}d", f.read(8))[0]
+        hcb["inlet"] = struct.unpack(f"{endian}h", f.read(2))[0]
+        hcb["outlets"] = struct.unpack(f"{endian}h", f.read(2))[0]
+        hcb["outmask"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["pipeloc"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["pipesize"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["in_byte"] = struct.unpack(f"{endian}d", f.read(8))[0]
+        hcb["out_byte"] = struct.unpack(f"{endian}d", f.read(8))[0]
+        hcb["outbytes"] = list(struct.unpack(f"{endian}8d", f.read(8 * 8)))
+        hcb["keylength"] = struct.unpack(f"{endian}i", f.read(4))[0]
+        hcb["keywords"] = f.read(92).decode("ascii", errors="replace")
+
+        if hcb["type"] == 1000:
+            hcb["adjunct"] = {
+                "xstart": struct.unpack(f"{endian}d", f.read(8))[0],
+                "xdelta": struct.unpack(f"{endian}d", f.read(8))[0],
+                "xunits": struct.unpack(f"{endian}i", f.read(4))[0],
+            }
+        elif hcb["type"] == 2000:
+            hcb["adjunct"] = {
+                "xstart": struct.unpack(f"{endian}d", f.read(8))[0],
+                "xdelta": struct.unpack(f"{endian}d", f.read(8))[0],
+                "xunits": struct.unpack(f"{endian}i", f.read(4))[0],
+                "subsize": struct.unpack(f"{endian}i", f.read(4))[0],
+                "ystart": struct.unpack(f"{endian}d", f.read(8))[0],
+                "ydelta": struct.unpack(f"{endian}d", f.read(8))[0],
+                "yunits": struct.unpack(f"{endian}i", f.read(4))[0],
+            }
+
+        return hcb
+
+    @staticmethod
+    def ExtendedHeader(f, hcb: Dict[str, Any], endian: str = "<") -> List[Dict[str, Any]]:
+        """Read the extended header keyword records."""
+        if hcb["ext_size"] <= 0:
+            return []
+
+        f.seek(int(hcb["ext_start"]) * 512, os.SEEK_SET)
+        ext_header: List[Dict[str, Any]] = []
+        bytesRemaining = int(hcb["ext_size"])
+
+        while bytesRemaining > 0:
+            lkey = struct.unpack(f"{endian}i", f
 ```
