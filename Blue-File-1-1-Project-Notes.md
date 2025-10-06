@@ -8,25 +8,10 @@ https://github.com/IQEngine/IQEngine/blob/main/api/converters/vita49_to_sigmf/vi
 
 ## ToDo
 
-### REDHAWK
+- Create python code
+- Create unit tests
 
-REDHAWK is a software-defined radio (SDR) framework designed to support the development, deployment, and management of real-time software radio applications.
-
-It includes libaries such as blueFileLib.
-
-https://github.com/RedhawkSDR/blueFileLib/blob/develop-2.0/cpp/src/HeaderControlBlock.cc
-
-It is possible to intergrate REDHAWK with GNURadio. A GNURadio Convention 2017 (GRCon 2017) talk provided information on this integration.
-
-https://github.com/geontech/gnuradio-redhawk
-
-### XMidasBlueReader
-
-This MATLAB class is a utility to progressively read through BLUE format files.
-
-https://github.com/Geontech/XMidasBlueReader/
-
-### Blue file version information 
+## Blue file version information 
 
 - Gold (original, deprecated)
 - BLUE 1.0
@@ -89,6 +74,37 @@ ToDo - Determine version
  | 24     |ystart |  8   |real_8| Abscissa (row) start                 |
  | 32     |ydelta |  8   |real_8| Increment between frames             |
  | 36     |yunits |  4   |int_4 | Abscissa (row) unit code             |
+
+
+
+## Tools and input streams
+
+### XMidasBlueReader
+
+This MATLAB class is a utility to progressively read through BLUE format files.
+
+https://github.com/Geontech/XMidasBlueReader/
+
+
+### Spectere
+
+3db labs provides signal processing and analysis software such as Sceptre that saves IQ signals.
+
+https://3db-labs.com/support/#customer-support
+
+### REDHAWK
+
+REDHAWK is a software-defined radio (SDR) framework designed to support the development, deployment, and management of real-time software radio applications.
+
+It includes libaries such as blueFileLib.
+
+https://github.com/RedhawkSDR/blueFileLib/blob/develop-2.0/cpp/src/HeaderControlBlock.cc
+
+It is possible to intergrate REDHAWK with GNURadio. A GNURadio Convention 2017 (GRCon 2017) talk provided information on this integration.
+
+https://github.com/geontech/gnuradio-redhawk
+
+
 
 
 
