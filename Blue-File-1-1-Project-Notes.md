@@ -17,9 +17,11 @@ For a handy html listing of the blue file elements.
 
 ## Goal
 
-*Create a python script similar to this file to covert Blue 1.1 files to SigMF*
+*Create a python script similar to these to covert Blue 1.1 files to SigMF*
 
 https://github.com/IQEngine/IQEngine/blob/main/api/converters/vita49_to_sigmf/vita49.py
+
+https://github.com/IQEngine/IQEngine/blob/main/tools/sdriq2sigmf/sdriq2sigmf.py
 
 Blue test files are kept here.
 
