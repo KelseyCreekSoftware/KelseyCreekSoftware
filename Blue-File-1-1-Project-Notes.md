@@ -17,9 +17,13 @@ For a handy html listing of the blue file elements.
 
 ## Goal
 
-Create a pyton script similar to this file to covert Blue 1.1 files to SigMF
+*Create a python script similar to this file to covert Blue 1.1 files to SigMF*
 
 https://github.com/IQEngine/IQEngine/blob/main/api/converters/vita49_to_sigmf/vita49.py
+
+Blue test files are kept here.
+
+https://github.com/sigmf/example_nonsigmf_recordings
 
 ## ToDo
 
@@ -72,7 +76,7 @@ C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\bluefile-main\bluefile-m
 000000B0   2D 4D 69 64 61 73 00 20 20 20 20 20 20 20 20 20  -Midas.
 ```
 
-###  Tektronix RSA7100A
+### Tektronix RSA7100A
 
 Tektronix, RSA7100A spectrum analyzer supports the Midas 2.0 (Platinum BLUE) format, with and without an embedded header.
  
@@ -107,13 +111,12 @@ https://3db-labs.com/support/#customer-support
 
 ### REDHAWK
 
-REDHAWK is a software-defined radio (SDR) framework designed to support the development, deployment, and management of real-time software radio applications.
-
-It includes libaries such as blueFileLib.
+REDHAWK is a software-defined radio (SDR) framework designed to support the development, deployment, and management of real-time software radio applications. 
+It includes libraries such as blueFileLib.
 
 https://github.com/RedhawkSDR/blueFileLib/blob/develop-2.0/cpp/src/HeaderControlBlock.cc
 
-It is possible to intergrate REDHAWK with GNURadio. A GNURadio Convention 2017 (GRCon 2017) talk provided information on this integration.
+It is possible to integrate REDHAWK with GNURadio. A GNURadio Convention 2017 (GRCon 2017) talk provided information on this integration.
 
 https://github.com/geontech/gnuradio-redhawk
 
