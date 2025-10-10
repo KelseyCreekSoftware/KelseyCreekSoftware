@@ -256,6 +256,12 @@ Blog Post describing setting up Inspectrum with SigMF Files
 
 https://www.jjhorton.co.uk/posts/inspectrumsigmf/
 
+### Sox - Convert IQ to WAV files
+
+Blog Post describing using Sox to convert IQ to WAV files
+
+https://www.pe0sat.vgnet.nl/sdr/sdr-software/using-iq-files/
+
 ## References and background information
 
 ### IQ Files and SigMF
@@ -284,4 +290,4 @@ https://www.youtube.com/watch?v=NiUy6Gnka3w
 
 https://www.pe0sat.vgnet.nl/sdr/iq-data-explained/
 
-*Page Updated - October 1 2025*
+*Page Updated - October 10 2025*
