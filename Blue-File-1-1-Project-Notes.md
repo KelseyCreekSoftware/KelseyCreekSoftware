@@ -27,6 +27,10 @@ Blue test files are kept here.
 
 https://github.com/sigmf/example_nonsigmf_recordings
 
+SigMF QuickStart is here.
+
+https://github.com/sigmf/sigmf-python/blob/main/docs/source/quickstart.rst
+
 ## ToDo
 
 - Create python code
@@ -52,6 +56,29 @@ https://github.com/Geontech/XMidasBlueReader/
 ### RUST BlueJay reader
 
 https://docs.rs/crate/bluefile/latest/source/src/bluejay.rs
+
+### Example 2.0 Header from sample file
+
+```
+Format-Hex .\2025-06-20_18-35-52_906858500hz.cdif | more
+Path:
+C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\2025-06-20_18-35-52_906858500hz.cdif
+
+           00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+
+00000000   42 4C 55 45 45 45 45 49 45 45 45 49 00 00 00 00  BLUEEEEIEEEI....
+00000010   00 00 00 00 00 00 00 00 F0 44 00 00 08 08 00 00  ........dD......
+00000020   00 00 00 00 00 00 80 40 00 00 00 00 97 3B 61 41  ......?@....?;aA
+00000030   E9 03 00 00 43 46 00 00 00 00 00 F1 88 BE E1 41  é...CF.....ñ?_áA
+00000040   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000050   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000060   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000070   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000080   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+00000090   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+000000A0   1D 00 00 00 49 4F 3D 53 63 65 70 74 72 65 00 54  ....IO=Sceptre.T
+000000B0   43 5F 50 52 45 43 3D 30 00 56 45 52 3D 32 2E 30  C_PREC=0.VER=2.0
+```
 
 #### 1.1 Blue test resource files
 
