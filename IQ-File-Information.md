@@ -57,6 +57,10 @@ For more information, see  [blue file project notes](Blue-File-1-1-Project-Notes
 
 https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
 
+The user manual of the IQ Data Recorder has additional information on R&S IQ file formats.
+
+https://scdn.rohde-schwarz.com/ur/pws/dl_downloads/dl_common_library/dl_manuals/dl_user_manual/IQR_UserManual_en_12.pdf
+
 *Includes Metadata: Yes*
 
 ## KeySight - Spectrum Analysis IQ File
