@@ -290,8 +290,12 @@ Marc Lichtman - SigMF update GRCon24
 
 https://www.youtube.com/watch?v=NiUy6Gnka3w
 
+### SigMF - Discord
+
+https://discord.com/channels/1063315697498853498/1063315698169937992
+
 ### PEØSAT IQ Data Explained
 
 https://www.pe0sat.vgnet.nl/sdr/iq-data-explained/
 
-*Page Updated - October 10 2025*
+*Page Updated - October 21 2025*
