@@ -451,8 +451,8 @@ def parse_data_values(path, hcb, endian="<"):
     samples.astype(np.complex64).tofile(f"{dest_path}.sigmf-data")
 
     # Plot output for debugging
-    debug_plot_signal(samples, sample_rate)
-    input("Press Enter to continue...")  # Pauses until user presses Enter
+    # debug_plot_signal(samples, sample_rate)
+    # input("Press Enter to continue...")  # Pauses until user presses Enter
     return samples
 
 def blue_to_sigmf(hcb, ext_entries, data_path):
@@ -476,6 +476,9 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
         "RI": "ri16_le",
         "RF": "rf32_le",
     }
+
+    # ToDo - handle endianness properly - for now, assume little-endian
+    # data_rep  : 'EEEI'  # Data representation
     datatype = datatype_map.get(hcb["format"], "ci16_le")
 
     # Sample rate: prefer adjunct.xdelta, else extended header SAMPLE_RATE
@@ -485,34 +488,49 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
         sr = get_tag("SAMPLE_RATE")
         sample_rate = float(sr) if sr is not None else None
 
+
+    # For now define hardware-description as a combination of SCEPTRE_APPLICATION 
+    hardware_description = "Blue File Conversion - Unknown Hardware"
+    blue_author = "Blue File Conversion - Unknown Author"
+    blue_licence = "Blue File Conversion - Unknown Licence"
+
     global_md = {
         "datatype": datatype,
         "sample_rate": sample_rate,
         "num_channels": int(hcb.get("outlets", 1)),
         "description": hcb.get("keywords", ""),
-        "hw": get_tag("SCEPTRE_APPLICATION") or get_tag("SCEPTRE_VER"),
-        "author": get_tag("SCEPTRE_TAG1"),
-        "version": "1.2.0",
+        "hw": hardware_description,
+        "author": blue_author,
+        "core:license": blue_licence,
+        "version": "1.0.0",
     }
 
     # --- Captures array ---
     captures = [{
         "sample_start": 0,
         "datetime": get_tag("TIME_EPOCH"),
-        "frequency": float(get_tag("ARF_FREQ") or 0.0),
+        "frequency": float(get_tag("RF_FREQ") or 0.0),
     }]
 
     # --- Annotations array ---
     annotations = []
-    for e in ext_entries:
-        if e["tag"] in ("TIME_EPOCH", "ARF_FREQ", "SAMPLE_RATE",
-                        "SCEPTRE_APPLICATION", "SCEPTRE_VER", "SCEPTRE_TAG1"):
-            continue  # already mapped
+  
+    for name, _, _, _, desc in HCB_LAYOUT:
         annotations.append({
-            "sample_start": 0,
-            "comment": f"{e['tag']} ({e['type']})",
-            "value": str(e["value"]),
+            "blue_hcb": f"{name}: {hcb[name]!r}  # {desc}",
         })
+
+#    annotations.append({
+#        hcb.get("blue_adjunct", hcb.get("adjunct_raw"))
+#    })
+
+    for e in ext_entries:
+        annotations.append({
+            "blue_extended_header": f"{e['tag']} ({e['type']}): {e['value']}",
+        })
+
+
+
 
     # --- Final SigMF object ---
     sigmf = {
@@ -626,7 +644,6 @@ if __name__ == "__main__":
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\keyword_test_file.tmp' # or cdif
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\lots_of_keywords.tmp' # or cdif
     dump_blue_file(filename, endian="<")
-
 
 ```
 
