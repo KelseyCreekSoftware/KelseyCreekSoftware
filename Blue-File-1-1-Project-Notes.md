@@ -277,7 +277,7 @@ ToDo - Determine 1.1 and 2.0 version differences
 # extended header keywords from a Blue file format.
 
 # Author: Don Marshall (with help from AI!)
-# Date: October 23, 2025
+# Date: October 24, 2025
 
 import os
 import json
@@ -410,20 +410,23 @@ def parse_extended_header(path, hcb, endian="<"):
 
 
 def parse_data_values(path, hcb, endian="<"):
+    print("=========================================")
+    print("===== Parsing blue file data values =====")
+    print("=========================================")
     with open(path, "rb") as f:
         data = f.read(512)
-        dtype = data[52:54].decode('utf-8') # eg 'CI' or 'CF'
-        print('Data type', dtype)
+        dtype = data[52:54].decode('utf-8') # eg 'CI', 'CF', 'SD'
+        print('Data type: ', dtype)
         endianness = data[8:12].decode('utf-8') # better be 'EEEI'! we'll assume it is from this point on
-        print('Endianness', endianness)
+        print('Endianness: ', endianness)
         time_interval = np.frombuffer(data[264:272], dtype=np.float64)[0]
         sample_rate = 1/time_interval
-        print('Sample rate', sample_rate/1e6, 'MHz')
+        print('Sample rate: ', sample_rate/1e6, 'MHz')
         data_size = int.from_bytes(data[28:32], byteorder='little')
-        print('Data size', data_size)
+        print('Data size: ', data_size)
         extended_header_size = int.from_bytes(data[28:32], byteorder='little')
         filesize = os.path.getsize(path)
-        print('File size', filesize)
+        print('File size: ', filesize)
 
     # Read in the IQ samples
     if dtype == 'CI':
@@ -446,13 +449,14 @@ def parse_data_values(path, hcb, endian="<"):
     # Normalize samples to -1.0 to +1.0 range
     # samples = samples / 32767.0
 
-    # Save out as SigMF data file
+    # Save out as SigMF IQ data file
     dest_path = filename.rsplit(".",1)[0]
     samples.astype(np.complex64).tofile(f"{dest_path}.sigmf-data")
 
     # Plot output for debugging
     # debug_plot_signal(samples, sample_rate)
     # input("Press Enter to continue...")  # Pauses until user presses Enter
+
     return samples
 
 def blue_to_sigmf(hcb, ext_entries, data_path):
@@ -488,49 +492,65 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
         sr = get_tag("SAMPLE_RATE")
         sample_rate = float(sr) if sr is not None else None
 
-
-    # For now define hardware-description as a combination of SCEPTRE_APPLICATION 
+    # For now define static values. Perhaps take as JSON input 
     hardware_description = "Blue File Conversion - Unknown Hardware"
     blue_author = "Blue File Conversion - Unknown Author"
     blue_licence = "Blue File Conversion - Unknown Licence"
 
     global_md = {
-        "datatype": datatype,
-        "sample_rate": sample_rate,
-        "num_channels": int(hcb.get("outlets", 1)),
-        "description": hcb.get("keywords", ""),
-        "hw": hardware_description,
-        "author": blue_author,
-        "core:license": blue_licence,
-        "version": "1.0.0",
+        "core:author": blue_author,
+        "core:datatype": datatype,
+        "core:description": hcb.get("keywords", ""),
+        "core:hw": hardware_description,
+        "core:core:license": blue_licence,
+        "core:num_channels": int(hcb.get("outlets", 1)),
+        "core:sample_rate": sample_rate,
+        "core:version": "1.0.0",
     }
 
     # --- Captures array ---
     captures = [{
-        "sample_start": 0,
-        "datetime": get_tag("TIME_EPOCH"),
-        "frequency": float(get_tag("RF_FREQ") or 0.0),
+        "core:datetime": get_tag("TIME_EPOCH"),
+        "core:frequency": float(get_tag("RF_FREQ") or 0.0),
+        "core:sample_start": 0,
     }]
 
     # --- Annotations array ---
     annotations = []
-  
-    for name, _, _, _, desc in HCB_LAYOUT:
-        annotations.append({
-            "blue_hcb": f"{name}: {hcb[name]!r}  # {desc}",
-        })
 
-#    annotations.append({
-#        hcb.get("blue_adjunct", hcb.get("adjunct_raw"))
-#    })
+    # Build one annotation dict with all HCB fields
+    hcb_annotation = {}
+ 
+    for name, _, _, _, desc in HCB_LAYOUT:
+        # hcb_annotation[f"blue:hcb_{name}"] = hcb[name]
+        value = hcb.get(name)             # safe access
+        if value is None:
+            continue                      # or set a default
+        hcb_annotation[f"blue:hcb_{name}"] = value
+    
+    annotations.append(hcb_annotation)
+
+    # Build one annotation dict with all adjunct fields
+    adjunct_annotation = {}
+    adjunct = hcb.get("adjunct", {})    
+    for key, value in adjunct.items():
+        adjunct_annotation[f"blue:adjunct_header_{key}"] = value   
+
+    annotations.append(adjunct_annotation)     
+
+    # Build one annotation dict with all of the extended header fields
+    extended_header_annotation = {}
 
     for e in ext_entries:
-        annotations.append({
-            "blue_extended_header": f"{e['tag']} ({e['type']}): {e['value']}",
-        })
-
-
-
+        name = e.get("tag")
+        if name is None:
+           continue
+        key = f"blue:extended_header_{name}"
+        value = e.get("value")
+        if hasattr(value, "item"):
+            value = value.item()
+        extended_header_annotation[key] = value
+    annotations.append(extended_header_annotation)
 
     # --- Final SigMF object ---
     sigmf = {
@@ -543,33 +563,24 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
     meta_path = os.path.splitext(data_path)[0] + ".sigmf-meta"
     with open(meta_path, "w") as f:
         json.dump(sigmf, f, indent=2)
-    print(f"Wrote SigMF metadata to {meta_path}")
+    print(f"==== Wrote SigMF metadata to {meta_path} ====")
 
     return sigmf
-
 
 
 def debug_plot_signal(samples, sample_rate):
     # Plot signal for debugging
     Fs = sample_rate
 
-    # Plot every sample to make sure there's no garbage
-    print(len(samples))
-    print(filename)
-    plt.title("Every Sample >>")
-    plt.plot(samples.real[::1])
-    plt.show()
+# ToDo - fix plotting for complex data
 
     # Detailed plots
     plt.plot(samples.real, ".-")
     plt.plot(samples.imag, ".-")
     plt.legend(["I", "Q"])
     plt.show()
-    print(samples)
-
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     n = len(samples)
-
     [frequencies, psd_db_hz] = calc_power_density_spectrum(Fs=Fs, n=n, iqarray=samples)
 
     # ax1.figure()
@@ -585,7 +596,6 @@ def debug_plot_signal(samples, sample_rate):
     ax2.set_xlabel("Time [s]")
     ax2.set_ylabel("Frequency [Hz]")
     fig.colorbar(im, ax=ax2).set_label("Power Density [dB/Hz]")
-
     plt.tight_layout()
     plt.show()
 
@@ -618,18 +628,22 @@ def calc_power_density_spectrum(Fs: float, n: int, iqarray):
 
     return [frequencies, psd_db_hz]
 
+# Main function to dump blue file contents
+
 def dump_blue_file(path, endian="<"):
     hcb = read_hcb(path, endian)
+
     print("=== HCB Fields ===")
     for name, _, _, _, desc in HCB_LAYOUT:
         print(f"{name:10s}: {hcb[name]!r}  # {desc}")
+
     print("\n=== Adjunct ===")
     print(hcb.get("adjunct", hcb.get("adjunct_raw")))
 
     ext = parse_extended_header(path, hcb, endian)
     print("\n=== Extended Header Keywords ===")
     for e in ext:
-        print(f"{e['tag']:20s} [{e['type']}] -> {e['value']}")
+        print(f"{e['tag']:20s}:{e['value']}")
 
     iq_data = parse_data_values(path, hcb, endian)
 
