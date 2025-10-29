@@ -298,4 +298,19 @@ https://discord.com/channels/1063315697498853498/1063315698169937992
 
 https://www.pe0sat.vgnet.nl/sdr/iq-data-explained/
 
-*Page Updated - October 21 2025*
+## IQ File Downloads
+
+### IQ Engine
+
+https://iqengine.org/
+
+### SDRAngel
+
+https://www.sdrangel.org/iq-files/
+
+### SDRPlay iq-demo files
+
+https://www.sdrplay.com/iq-demo-files/
+
+
+*Page Updated - October 29 2025*
