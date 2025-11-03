@@ -1,5 +1,7 @@
 # MIDIS Blue File Project Notes
 
+*Updated 11/3/2025*
+
 ## Overview
 
 For an overview of the Midas Blue file format, refer to this topic in PySDR.
@@ -131,35 +133,136 @@ A_Sign_in_Space-Medicina.sigmf-meta
 }
 ```
 
-Early idea for blue metadata for hcb, adjunct and extended header
+Key fields needed for decoding in GNURadio.
 
 ```json
-{
+Type
+
+FFT size
+
+center_freq
+
+sample_rate
+
+sample_size 
+```
+
+Early idea for blue metadata for hcb, adjunct and extended header.
+
+```json
+{{
   "global": {
-    "core:datatype": "cf32",
-    "core:sample_rate": 20000000,
-    "core:version": "1.0.0",
-    "core:description": "Wi-Fi signal capture in the 2.4 GHz ISM band",
-    "core:author": "Your Name",
-    "core:license": "CC-BY-4.0",
-    "core:meta_doi": "10.1234/example.doi",
-    "blue:standard": "802.11g",
-    "blue:channel": 6,
-    "blue:bandwidth": 20e6
+    "core:author": "Blue File Conversion - Unknown Author",
+    "core:datatype": "cf32_le",
+    "core:description": "IO=Sceptre\u0000TC_PREC=0\u0000VER=2.0",
+    "core:hw": "Blue File Conversion - Unknown Hardware",
+    "core:core:license": "Blue File Conversion - Unknown Licence",
+    "core:num_channels": 0,
+    "core:sample_rate": 1750000.0000000002,
+    "core:version": "1.0.0"
   },
   "captures": [
     {
-      "core:sample_start": 0,
-      "core:frequency": 2437000000,
-      "core:datetime": "2025-10-23T12:00:00Z"
+      "core:datetime": "2025-06-20T18:35:52Z",
+      "core:frequency": 906858500.0,
+      "core:sample_start": 0
     }
   ],
   "annotations": [
     {
-      "core:description": "Data frame transmission",
-      "blue_hcb:frame_foo": "Data",
-      "blue_adj:blah_bar": "Data",
-      "blue_eh:lunar_cat": "Data",
+      "blue:hcb_version": "BLUE",
+      "blue:hcb_head_rep": "EEEI",
+      "blue:hcb_data_rep": "EEEI",
+      "blue:hcb_detached": 0,
+      "blue:hcb_protected": 0,
+      "blue:hcb_pipe": 0,
+      "blue:hcb_ext_start": 17648,
+      "blue:hcb_ext_size": 2056,
+      "blue:hcb_data_start": 512.0,
+      "blue:hcb_data_size": 9034936.0,
+      "blue:hcb_type": 1001,
+      "blue:hcb_format": "CF",
+      "blue:hcb_flagmask": 0,
+      "blue:hcb_timecode": 2381596552.0,
+      "blue:hcb_inlet": 0,
+      "blue:hcb_outlets": 0,
+      "blue:hcb_outmask": 0,
+      "blue:hcb_pipeloc": 0,
+      "blue:hcb_pipesize": 0,
+      "blue:hcb_in_byte": 0.0,
+      "blue:hcb_out_byte": 0.0,
+      "blue:hcb_outbytes": 0.0,
+      "blue:hcb_keylength": 29,
+      "blue:hcb_keywords": "IO=Sceptre\u0000TC_PREC=0\u0000VER=2.0"
+    },
+    {
+      "blue:adjunct_header_xstart": 0.12667871432857147,
+      "blue:adjunct_header_xdelta": 5.714285714285714e-07,
+      "blue:adjunct_header_xunits": 1
+    },
+    {
+      "blue:extended_header_TIME_DELTA": 1e-10,
+      "blue:extended_header_TIME_EPOCH": "2025-06-20T18:35:52Z",
+      "blue:extended_header_RF_FREQ": 906858500.0,
+      "blue:extended_header_ACQETF": 906858500.0,
+      "blue:extended_header_ACQDATE": "20250620",
+      "blue:extended_header_ACQTIME": "18:35:52",
+      "blue:extended_header_SCEPTRE_VER": "5.7.0",
+      "blue:extended_header_IOVERSION": "Sceptre 5.7.0",
+      "blue:extended_header_APPLICATION": "Sceptre",
+      "blue:extended_header_SCEPTRE_BANDWIDTH": 1250000.0,
+      "blue:extended_header_SBT_BANDWIDTH": 1250000.0,
+      "blue:extended_header_SBT": 906858500.0,
+      "blue:extended_header_SBT_FREQ": 906858500.0,
+      "blue:extended_header_VRF": 906858500.0,
+      "blue:extended_header_IF": 0.0,
+      "blue:extended_header_FS": 1750000.0000000002,
+      "blue:extended_header_SCEPTRE_CHANNEL": 1,
+      "blue:extended_header_SCEPTRE_CATEGORY": "PRED",
+      "blue:extended_header_SCEPTRE_STREAM_PATH": "/Input 1/Channel 1",
+      "blue:extended_header_SCEPTRE_SESSION": "session-file-20251007-181810-221096",
+      "blue:extended_header_ANTENNA": "NONE",
+      "blue:extended_header_MISSION": "NONE",
+      "blue:extended_header_PATH": "NONE",
+      "blue:extended_header_PATHDELAY": 0.0,
+      "blue:extended_header_SAMPLE_RATE.UNITS": 3,
+      "blue:extended_header_OUTPUT_IF.UNITS": 3,
+      "blue:extended_header_DATA_RF.UNITS": 3,
+      "blue:extended_header_COL_RF.UNITS": 3,
+      "blue:extended_header_DATA_BANDWIDTH.UNITS": 3,
+      "blue:extended_header_DATA_GAIN.UNITS": 35,
+      "blue:extended_header_EVENT.OFFSET": 0,
+      "blue:extended_header_EVENT.TIME": 1266787143,
+      "blue:extended_header_EVENT.TIME.UNITS": 32,
+      "blue:extended_header_EVENT.DURATION": 0.6453525714571425,
+      "blue:extended_header_COL_RF": 906858500.0,
+      "blue:extended_header_COL_RF.EVENT": 0,
+      "blue:extended_header_DATA_BANDWIDTH": 1250000.0,
+      "blue:extended_header_DATA_BANDWIDTH.EVENT": 0,
+      "blue:extended_header_DATA_GAIN": 84.30899810791016,
+      "blue:extended_header_DATA_GAIN.EVENT": 0,
+      "blue:extended_header_DATA_INVERSION_FLAG": 0,
+      "blue:extended_header_DATA_INVERSION_FLAG.EVENT": 0,
+      "blue:extended_header_DATA_RF": 906858500.0,
+      "blue:extended_header_DATA_RF.EVENT": 0,
+      "blue:extended_header_OUTPUT_IF": 0.0,
+      "blue:extended_header_OUTPUT_IF.EVENT": 0,
+      "blue:extended_header_SAMPLE_RATE": 1750000.0000000002,
+      "blue:extended_header_SAMPLE_RATE.EVENT": 0,
+      "blue:extended_header_TIMETAG.OFFSET": 0,
+      "blue:extended_header_TIMETAG.TIME": 1266787143,
+      "blue:extended_header_TIMETAG.TIME.UNITS": 32,
+      "blue:extended_header_SCEPTRE_MAX_VAL": 654.8604125976562,
+      "blue:extended_header_SCEPTRE_MIN_VAL": -658.2073974609375,
+      "blue:extended_header_TUNER_START_ABSC": 2.893764,
+      "blue:extended_header_PRETUNED_CENTER_FREQ": -2.2250738585072014e-308,
+      "blue:extended_header_SCEPTRE_TAG1": "LoRa",
+      "blue:extended_header_SCEPTRE_TAG2": "Meshtastic",
+      "blue:extended_header_SCEPTRE_TAG3": "SF11",
+      "blue:extended_header_SCEPTRE_TAG4": "Test",
+      "blue:extended_header_SCEPTRE_TAG5": "250 kHz",
+      "blue:extended_header_SCEPTRE_TAG6": "decoded",
+      "blue:extended_header_SCEPTRE_NOTES": "python3 meshtastic_gnuradio_RX.py -i ffffffff202f6033ef11d2c863080000302abbf12cd6917ba7d4\nTEXT_MESSAGE_APP 33602f20 -> ffffffff Test"
     }
   ]
 }
