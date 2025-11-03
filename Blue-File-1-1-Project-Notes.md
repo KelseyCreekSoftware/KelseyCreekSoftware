@@ -38,6 +38,34 @@ https://github.com/sigmf/sigmf-python/blob/main/docs/source/quickstart.rst
 - Create python code
 - Create unit tests
 
+## Data mapping
+
+(Assuming IEEE endinaness) 
+
+|Blue |  SigMF  |
+|---- |-------- |
+| CI  | ci16_le |
+| CL  | ci32_le|
+| CF  | cf32_le |
+| SB  | r8_le|
+| SI  | ri16_le|
+| SL  | ri32_le|
+| SX  | ri64_le|
+| SF  | rf32_le|
+| SD  | rf64_le|
+
+SigMF data types
+
+```json
+    real = "r"
+    complex = "c"
+
+    type = floating-point / signed-integer / unsigned-integer
+    floating-point = "f32" / "f64"
+    signed-integer = "i32" / "i16"
+    unsigned-integer = "u32" / "u16"
+```
+
 ## Blue file version information 
 
 - Gold (original, deprecated)
