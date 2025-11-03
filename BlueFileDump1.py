@@ -5,7 +5,7 @@
 # extended header keywords from a Blue file format.
 
 # Author: Don Marshall (with help from AI!)
-# Date: October 28, 2025
+# Date: November 3, 2025
 
 import os
 import json
@@ -162,15 +162,19 @@ def parse_data_values(path, hcb, endian="<"):
     print("===== Parsing blue file data values =====")
     with open(path, "rb") as f:
         data = f.read(HEADER_SIZE)
+        if len(data) < HEADER_SIZE:
+            raise ValueError("Incomplete header")
         dtype = data[52:54].decode('utf-8') # eg 'CI', 'CF', 'SD'
         print('Data type: ', dtype)
         if dtype not in SUPPORTED_TYPES:
             raise ValueError(f"Unsupported data type: {dtype}")
-        endianness = data[8:12].decode('utf-8') # better be 'EEEI'! we'll assume it is from this point on
+        endianness = data[8:12].decode('utf-8') # ToDo handle both types 'EEEI'! we'll assume it is from this point on
         print('Endianness: ', endianness)
-        if endianness != 'EEEI':
+        if endianness not in ('EEEI', 'IEEE'):
             raise ValueError(f"Unexpected endianness: {endianness}")    
         time_interval = np.frombuffer(data[264:272], dtype=np.float64)[0]
+        if time_interval <= 0:
+            raise ValueError(f"Invalid time interval: {time_interval}")
         sample_rate = 1/time_interval
         print('Sample rate: ', sample_rate/1e6, 'MHz')
         extended_header_data_size = int.from_bytes(data[28:32], byteorder='little')
@@ -179,25 +183,33 @@ def parse_data_values(path, hcb, endian="<"):
 
     # Complex data parsing
 
-    # complex 16-bit integer  IQ data
+    # complex 16-bit integer  IQ data > ci16_le in SigMF
     if dtype == 'CI':
-      samples = np.fromfile(filename, dtype=np.int16, offset=HEADER_SIZE, count=(filesize-extended_header_data_size))
-      samples = samples[::2] + 1j*samples[1::2] # convert to IQIQIQ...
-
+      elem_size = np.dtype(np.int16).itemsize
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      raw_samples = np.fromfile(filename, dtype=np.int16, offset=HEADER_SIZE, count=elem_count)
+    # Reassemble interleaved IQ samples
+      samples = raw_samples[::2] + 1j*raw_samples[1::2] # convert to IQIQIQ...
+    # Normalize samples to -1.0 to +1.0 range
+      samples = samples.astype(np.float32)  / 32767.0
+    
+    # complex 32-bit integer  IQ data > ci32_le in SigMF
     if dtype == 'CL':
-      sample_size=np.dtype(np.complex32).itemsize  # Will be 4 bytes
-      sample_count = (filesize - extended_header_data_size) // sample_size
-      samples = np.fromfile(filename, dtype=np.int32, offset=HEADER_SIZE, count=(filesize-extended_header_data_size))
-      samples = samples[::2] + 1j*samples[1::2] # convert to IQIQIQ...
+      elem_size = np.dtype(np.int32).itemsize
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      raw_samples = np.fromfile(filename, dtype=np.int32, offset=HEADER_SIZE, count=elem_count)
+    # Reassemble interleaved IQ samples
+      samples = raw_samples[::2] + 1j*raw_samples[1::2] # convert to IQIQIQ...
+    # Normalize samples to -1.0 to +1.0 range
+      samples = samples.astype(np.float32) / 2147483647.0
 
+    # complex 32-bit float  IQ data > cf32_le in SigMF
     if dtype == 'CF':
-      # Each complex sample is 8 bytes (2 x float32), so np.complex64 is appropriate
-      # samples = np.fromfile(filename, dtype=np.complex64, offset=HEADER_SIZE, count=(filesize-extended_header_data_size))
+      # Each complex sample is 8 bytes total (2 × float32), so np.complex64 is appropriate
       # No need to reassemble IQ — already complex
-      # Each sample is 8 bytes (float64), so compute count
-      sample_size=np.dtype(np.complex64).itemsize  # Will be 8 bytes
-      sample_count = (filesize - extended_header_data_size) // sample_size
-      samples = np.fromfile(filename, dtype=np.complex64, offset=HEADER_SIZE, count=sample_count)
+      elem_size=np.dtype(np.complex64).itemsize  # Will be 8 bytes
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      samples = np.fromfile(filename, dtype=np.complex64, offset=HEADER_SIZE, count=elem_count)
  
     # ToDo - how to handle Scalar types properly? 
     # Reshape per mathlab port?
@@ -220,47 +232,55 @@ def parse_data_values(path, hcb, endian="<"):
     """
 
 
-    # Scalar data parsing
-    if dtype == 'SB':
-      sample_size=np.dtype(np.int8).itemsize 
-      samples = np.fromfile(filename, dtype=np.int8, offset=HEADER_SIZE, count=(filesize - extended_header_data_size) // sample_size)
-
-    # Scalar data parsing
-    if dtype == 'SI':
-      sample_size=np.dtype(np.int16).itemsize 
-      samples = np.fromfile(filename, dtype=np.int16, offset=HEADER_SIZE, count=(filesize - extended_header_data_size) // sample_size)
-
-    # Scalar data parsing
-    if dtype == 'SL':
-      sample_size=np.dtype(np.int32).itemsize 
-      samples = np.fromfile(filename, dtype=np.int32, offset=HEADER_SIZE, count=(filesize - extended_header_data_size) // sample_size)
-
-    # Scalar data parsing
-    if dtype == 'SX':
-      sample_size=np.dtype(np.int64).itemsize 
-      samples = np.fromfile(filename, dtype=np.int64, offset=HEADER_SIZE, count=(filesize - extended_header_data_size) // sample_size)
-
-    # Scalar data parsing
-    if dtype == 'SF':
-      sample_size=np.dtype(np.float32).itemsize 
-      samples = np.fromfile(filename, dtype=np.float32, offset=HEADER_SIZE, count=(filesize - extended_header_data_size) // sample_size)
-
-    # Scalar data parsing
-    if dtype == 'SD':
-      sample_size=np.dtype(np.float64).itemsize 
-      samples = np.fromfile(filename, dtype=np.float64, offset=HEADER_SIZE, count=(filesize - extended_header_data_size) // sample_size)
-
-    # ToDo - determine if required and whne to use normalization
+    # Scalar data parsing > ri8_le in SigMF
+    if dtype == 'SB': 
+      elem_size=np.dtype(np.int8).itemsize 
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      samples = np.fromfile(filename, dtype=np.int8, offset=HEADER_SIZE, count=elem_count)
     # Normalize samples to -1.0 to +1.0 range
-    # samples = samples / 32767.0
+      samples = samples.astype(np.float32)  / 127.0
 
+    # Scalar data parsing > ri16_le in SigMF
+    if dtype == 'SI': 
+      elem_size = np.dtype(np.int16).itemsize
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      samples = np.fromfile(filename, dtype=np.int16, offset=HEADER_SIZE, count=elem_count)
+    # Normalize samples to -1.0 to +1.0 range
+      samples = samples / 32767.0
+
+    # Scalar data parsing > ri32_le in SigMF
+    if dtype == 'SL':
+      elem_size=np.dtype(np.int32).itemsize 
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      samples = np.fromfile(filename, dtype=np.int32, offset=HEADER_SIZE, count=elem_count)
+    # Normalize samples to -1.0 to +1.0 range
+      samples = samples / 2147483647.0
+
+    # Scalar data parsing > ri64_le in SigMF
+    if dtype == 'SX':
+      elem_size=np.dtype(np.int64).itemsize 
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      samples = np.fromfile(filename, dtype=np.int64, offset=HEADER_SIZE, count=elem_count)
+
+    # Scalar data parsing > rf32_le in SigMF
+    if dtype == 'SF':
+      elem_size=np.dtype(np.float32).itemsize 
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      samples = np.fromfile(filename, dtype=np.float32, offset=HEADER_SIZE, count=elem_count)
+
+    # Scalar data parsing > rf64_le in SigMF
+    if dtype == 'SD':
+      elem_size=np.dtype(np.float64).itemsize 
+      elem_count = (filesize - extended_header_data_size) // elem_size
+      samples = np.fromfile(filename, dtype=np.float64, offset=HEADER_SIZE, count=elem_count)
+ 
     # Save out as SigMF IQ data file
     dest_path = filename.rsplit(".",1)[0]
     samples.astype(np.complex64).tofile(f"{dest_path}.sigmf-data")
 
     # Plot output for debugging
-    debug_plot_signal(samples, sample_rate)
-    input("Press Enter to continue...")  # Pauses until user presses Enter
+    # debug_plot_signal(samples, sample_rate)
+    # input("Press Enter to continue...")  # Pauses until user presses Enter
 
     return samples
 
@@ -327,22 +347,22 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
         "CD": "cf32_be",
     }
 
-    # data_rep  : 'EEEI'  # Data endianess representation
+    # data_rep  : 'EEEI' or 'IEEE' # Little or big data endianess representation
     data_rep = hcb.get("data_rep")
 
     # data_format : For example 'CI'  or 'SD'  Data format code - real or complex, int or float
     data_format = hcb.get("format")
-    
-    if data_rep == "EEEI": # Big Endian
-        data_map = datatype_map_be.get(data_format)
-    
-    elif data_rep == "IEEE": # Little Endian
+            
+    if data_rep == "EEEI": # Little Endian
         data_map = datatype_map_le.get(data_format)
+    
+    elif data_rep == "IEEE": # Big Endian
+        data_map = datatype_map_be.get(data_format)
     
     datatype = data_map if data_map is not None else "unknown"
 
-    print(f"Determined SigMF datatype: {datatype}")
-    
+    print(f"Determined SigMF datatype: {datatype} and data representation: {data_rep}")
+
     # Sample rate: prefer adjunct.xdelta, else extended header SAMPLE_RATE
     if "adjunct" in hcb and "xdelta" in hcb["adjunct"]:
         sample_rate = 1.0 / hcb["adjunct"]["xdelta"]
@@ -552,4 +572,3 @@ if __name__ == "__main__":
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\keyword_test_file.tmp' # or cdif
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\lots_of_keywords.tmp' # or cdif
     dump_blue_file(filename)
-  
