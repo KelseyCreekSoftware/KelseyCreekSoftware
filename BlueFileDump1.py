@@ -5,14 +5,13 @@
 # extended header keywords from a Blue file format.
 
 # Author: Don Marshall (with help from AI!)
-# Date: November 3, 2025
+# Date: November 5, 2025
 
 import os
 import json
 import struct
-import scipy.signal
+import hashlib
 import numpy as np
-import matplotlib.pyplot as plt
 from astropy.time import Time
 from sigmf import SigMFFile # Assuming sigmf library is installed
 
@@ -211,7 +210,7 @@ def parse_data_values(path, hcb, endian="<"):
       elem_count = (filesize - extended_header_data_size) // elem_size
       samples = np.fromfile(filename, dtype=np.complex64, offset=HEADER_SIZE, count=elem_count)
  
-    # ToDo - how to handle Scalar types properly? 
+    # ToDo - validate handling of scalar types 
     # Reshape per mathlab port?
     """
             fmt_size_char = self.hcb["format"][0]
@@ -230,7 +229,6 @@ def parse_data_values(path, hcb, endian="<"):
             bytesRemaining = int(self.hcb["data_size"] - bytesRead)
 
     """
-
 
     # Scalar data parsing > ri8_le in SigMF
     if dtype == 'SB': 
@@ -278,10 +276,6 @@ def parse_data_values(path, hcb, endian="<"):
     dest_path = filename.rsplit(".",1)[0]
     samples.astype(np.complex64).tofile(f"{dest_path}.sigmf-data")
 
-    # Plot output for debugging
-    # debug_plot_signal(samples, sample_rate)
-    # input("Press Enter to continue...")  # Pauses until user presses Enter
-
     return samples
 
 def blue_to_sigmf(hcb, ext_entries, data_path):
@@ -306,7 +300,7 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
 # S - Scalar
 # C-  Complex
 # V - Vector
-# Q-  Quad - ToDo - add support for other types.
+# Q-  Quad - ToDo - add support for other types if they are commonly used.
 
 # B: 8-bit integer
 # I: 16-bit integer
@@ -373,18 +367,49 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
     # For now define static values. Perhaps take as JSON input 
     hardware_description = "Blue File Conversion - Unknown Hardware"
     blue_author = "Blue File Conversion - Unknown Author"
-    blue_licence = "Blue File Conversion - Unknown Licence"
+    blue_licence = "Blue File Conversion - Unknown License"
 
+    if "outlets"in hcb and hcb["outlets"] > 0:
+        channelNumber = int(hcb["outlets"])
+    else:    
+       channelNumber = 1
+    
+    # --- Base Global Metadata ---
     global_md = {
         "core:author": blue_author,
         "core:datatype": datatype,
         "core:description": hcb.get("keywords", ""),
         "core:hw": hardware_description,
         "core:core:license": blue_licence,
-        "core:num_channels": int(hcb.get("outlets", 1)),
+        "core:num_channels":channelNumber,
         "core:sample_rate": sample_rate,
         "core:version": "1.0.0",
     }
+
+    for name, _, _, _, desc in HCB_LAYOUT:
+        # hcb_annotation[f"blue:hcb_{name}"] = hcb[name]
+        value = hcb.get(name)             # safe access
+        if value is None:
+            continue                      # or set a default
+        global_md[f"core:blue_hcb_{name}"] = value
+
+    # --- Merge adjunct fields ---
+    adjunct = hcb.get("adjunct", {})    
+    for key, value in adjunct.items():
+        global_md[f"core:blue_adjunct_header_{key}"] = value   
+
+    # --- Merge extended header fields ---
+    for e in ext_entries:
+        name = e.get("tag")
+        if name is None:
+           continue
+        key = f"core:blue_extended_header_{name}"
+        value = e.get("value")
+        if hasattr(value, "item"):
+            value = value.item()
+        global_md[key] = value
+  
+    # ToDo - add time conversion from TIME_EPOCH to ISO 8601 format if required
 
     # --- Captures array ---
     captures = [{
@@ -393,42 +418,60 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
         "core:sample_start": 0,
     }]
 
+    # compute SHA‑512 hash of data file
+    def compute_sha512(path, bufsize=1024*1024):
+        """Compute SHA-512 hash of a file in chunks."""
+        
+        h = hashlib.sha512()
+        with open(path, "rb") as f:
+            while chunk := f.read(bufsize):
+                h.update(chunk)
+        return h.hexdigest()
+
+    # Strip the extension from the original filename
+    base_file_name = os.path.splitext(filename)[0]
+
+    # Build the .sigmf-data path
+    data_file_path = base_file_name + ".sigmf-data"
+
+    # Compute SHA-512 of the data file
+    data_sha512 = compute_sha512(data_file_path)   # path to the .sigmf-data file
+    global_md["core:sha512"] = data_sha512
+
     # --- Annotations array ---
-    annotations = []
+    datatype_sizes = {
+        "ri8_le": 1,
+        "ri16_le": 2,
+        "ri32_le": 4,
+        "ci16_le": 4,
+        "ci32_le": 8,
+        "cf32_le": 8,
+        "rf32_le": 4,
+        "rf64_le": 8,
+        "ri64_le": 8,
+        "ri8_be": 1,
+        "ri16_be": 2,
+        "ri32_be": 4,
+        "ci16_be": 4,
+        "ci32_be": 8,
+        "cf32_be": 8,
+        "rf32_be": 4,
+        "rf64_be": 8,
+        "ri64_ble": 8,
+    }
 
-    # Build one annotation dict with all HCB fields
-    hcb_annotation = {}
- 
-    for name, _, _, _, desc in HCB_LAYOUT:
-        # hcb_annotation[f"blue:hcb_{name}"] = hcb[name]
-        value = hcb.get(name)             # safe access
-        if value is None:
-            continue                      # or set a default
-        hcb_annotation[f"blue:hcb_{name}"] = value
-    
-    annotations.append(hcb_annotation)
+    # Calculate sample count
+    data_size = int(hcb.get("data_size", 0))
+    bytes_per_sample = datatype_sizes[datatype]
+    sample_count = int(data_size // bytes_per_sample)
 
-    # Build one annotation dict with all adjunct fields
-    adjunct_annotation = {}
-    adjunct = hcb.get("adjunct", {})    
-    for key, value in adjunct.items():
-        adjunct_annotation[f"blue:adjunct_header_{key}"] = value   
-
-    annotations.append(adjunct_annotation)     
-
-    # Build one annotation dict with all of the extended header fields
-    extended_header_annotation = {}
-
-    for e in ext_entries:
-        name = e.get("tag")
-        if name is None:
-           continue
-        key = f"blue:extended_header_{name}"
-        value = e.get("value")
-        if hasattr(value, "item"):
-            value = value.item()
-        extended_header_annotation[key] = value
-    annotations.append(extended_header_annotation)
+    annotations = [{
+        "core:sample_start": 0,
+        "core:sample_count": sample_count,
+        "core:freq_upper_edge": float(get_tag("RF_FREQ") or 0.0) + float(get_tag("SBT_BANDWIDTH") or 0.0),
+        "core:freq_lower_edge": float(get_tag("RF_FREQ") or 0.0),
+        "core:label": "Sceptere"
+    }]
 
     # --- Final SigMF object ---
     sigmf = {
@@ -438,93 +481,14 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
     }
 
     # Write .sigmf-meta file
-    meta_path = os.path.splitext(data_path)[0] + ".sigmf-meta"
+    base_file_name = os.path.splitext(filename)[0]
+    meta_path = base_file_name + ".sigmf-meta"
+    
     with open(meta_path, "w") as f:
         json.dump(sigmf, f, indent=2)
     print(f"==== Wrote SigMF metadata to {meta_path} ====")
 
     return sigmf
-
-
-def debug_plot_signal(samples, sample_rate):
-    """Optional signal plot used for checking IQ signal decode."""
-
-    # Plot signal for debugging
-    Fs = sample_rate
-
-# ToDo - fix plotting for complex data
-
-    print(f"Sample type: {samples.dtype}")
-    print(f"First few samples: {samples[:5]}")
-    print(f"Min/Max real: {np.min(samples.real):.2f}/{np.max(samples.real):.2f}")
-    print(f"Min/Max imag: {np.min(samples.imag):.2f}/{np.max(samples.imag):.2f}")
-
-    # Normalize if needed based on data type?
-    if samples.dtype in [np.int16, np.int32]:
-        samples = samples / np.max(np.abs(samples))
-    
-    # Take a subset of samples if too many points
-    max_samples = 1000
-    if len(samples) > max_samples:
-        step = len(samples) // max_samples
-        subsetsamples = samples[::step]
-
-    # IQ Plot
-    plt.plot(subsetsamples.real, ".-", label="I")
-    plt.plot(subsetsamples.imag, ".-", label="Q")
-    plt.xlabel("Sample Index")
-    plt.ylabel("Amplitude")
-    plt.title("IQ Signal Components")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-    
-    # Frequency domain plots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
-    n = len(samples)
-    [frequencies, psd_db_hz] = calc_power_density_spectrum(Fs=Fs, n=n, iqarray=samples)
-
-    # ax1.figure()
-    ax1.plot(frequencies, psd_db_hz)
-    ax1.set_title("Power Density spectrum")
-    ax1.set_xlabel("Frequency [Hz]")
-    ax1.set_ylabel("Power Density [dB/Hz]")
-    ax1.grid()
-
-   # ax2.specgram(data.iq_data)
-    Pxx, freqs, bins, im = ax2.specgram(samples)
-    ax2.set_title("Spectogram")
-    ax2.set_xlabel("Time [s]")
-    ax2.set_ylabel("Frequency [Hz]")
-    fig.colorbar(im, ax=ax2).set_label("Power Density [dB/Hz]")
-    plt.tight_layout()
-    plt.show()
-
-    return
-
-def calc_power_density_spectrum(Fs: float, n: int, iqarray):
-    """calculates the power density spectrum of an array of iq data.
-
-    :param float Fs: sampling frequency
-    :param int n: length of iq array
-    :param _type_ iqarray: iq data in complex array
-    :return _type_: frequency bins and logarithmic amplitudes
-
-    """
-    window = scipy.signal.windows.hamming(n)
-    iq_array = iqarray * window
-    if Fs is None:
-        Fs = 1
-
-    fft_sig = np.fft.fft(iq_array)
-    fft_sig = np.fft.fftshift(fft_sig)
-    frequencies = np.fft.fftfreq(n, 1 / Fs)
-    frequencies = np.fft.fftshift(frequencies)
-
-    psd = (np.abs(fft_sig) ** 2) / (Fs * n)
-    psd_db_hz = 10 * np.log10(psd)
-
-    return [frequencies, psd_db_hz]
 
 
 def dump_blue_file(path):
@@ -536,6 +500,9 @@ def dump_blue_file(path):
 
     # ToDo - determine endian from head_rep field with error checking
     hcb = read_hcb(path, endian="<")  # Assuming little-endian
+
+    # data_rep  : 'EEEI' or 'IEEE' # Little or big data endianess representation
+    data_rep = hcb.get("data_rep")
     
     print("=== Header Control Block (HCB) Fields ===")
     for name, _, _, _, desc in HCB_LAYOUT:
@@ -564,11 +531,12 @@ def dump_blue_file(path):
 
 if __name__ == "__main__":
     """ Main calls dump blue file contents."""
-    # ToDo - add command line args for filename
-    filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\SceptretTestFile1.cdif'
-    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\pulse_cx.tmp' # or cdif
+    # ToDo - add command line args for filename - cdif or .tmp files
+    filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\SceptreTestFile1.cdif'
+    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\pulse_cx.tmp'
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\sin.tmp' 
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\penny.prm' 
-    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\keyword_test_file.tmp' # or cdif
-    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\lots_of_keywords.tmp' # or cdif
+    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\keyword_test_file.tmp' 
+    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\lots_of_keywords.tmp' 
     dump_blue_file(filename)
+
