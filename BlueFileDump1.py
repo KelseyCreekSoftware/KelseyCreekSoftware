@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# Archive - see blue_file_to_sigmf.py for latest code!  :)
+
 # Blue File Reader with HCB and Extended Header Parsing
 # This script reads and parses the HCB (Header Control Block) and
 # extended header keywords from a Blue file format.
