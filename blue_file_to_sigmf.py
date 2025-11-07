@@ -58,9 +58,14 @@ TYPE_MAP = {
     "A": (np.dtype("S1"), 1),
 }
 
-def read_hcb(path, endian="<"):
+def read_hcb(path):
     """Read HCB fields and adjunct block."""
     HEADER_SIZE = 512
+
+    # ToDo - determine endian from head_rep field with error checking
+    # better be 'EEEI' little endian for this first header decode
+    endian="<"
+
     hcb = {}
     with open(path, "rb") as f:
         data = f.read(HEADER_SIZE)
@@ -95,7 +100,7 @@ def read_hcb(path, endian="<"):
             f.seek(256)
             hcb["adjunct_raw"] = f.read(256)
 
-    return hcb
+    return hcb 
 
 def parse_extended_header(file_path, hcb, endian="<"):
     """Parse extended header keyword records.
@@ -147,12 +152,12 @@ def parse_extended_header(file_path, hcb, endian="<"):
     return entries
 
 
-def parse_data_values(path, hcb, endian="<"):
+def parse_data_values(path,hcb,endianess):
     """Parse key HCB values that are used for further processing.
         Args:
         path: Path to Blue File
         hcb: Header Control Block dictionary
-        endian: Endianness ('<' for little, '>' for big)
+        endianess: Endianness ('<' for little, '>' for big)
     Returns:
         numpy.ndarray: Parsed samples
     """
@@ -169,10 +174,13 @@ def parse_data_values(path, hcb, endian="<"):
         print('Data type: ', dtype)
         if dtype not in SUPPORTED_TYPES:
             raise ValueError(f"Unsupported data type: {dtype}")
-        endianness = data[8:12].decode('utf-8') # ToDo handle both types 'EEEI'! we'll assume it is from this point on
+
+        # ToDo handle both types 'EEEI'! we'll assume it is from this point on
+        endianness = data[8:12].decode('utf-8') 
         print('Endianness: ', endianness)
         if endianness not in ('EEEI', 'IEEE'):
             raise ValueError(f"Unexpected endianness: {endianness}")    
+
         time_interval = np.frombuffer(data[264:272], dtype=np.float64)[0]
         if time_interval <= 0:
             raise ValueError(f"Invalid time interval: {time_interval}")
@@ -504,12 +512,9 @@ def blue_file_to_sigmf(path):
     print("===== Starting blue file processing =====")
     print("==========================================")
 
-    # data_rep  : 'EEEI' or 'IEEE' # Little or big data endianess representation
-    data_rep = hcb.get("data_rep")
+    # Read Header control block (HCB) from blue file to determine how to process the rest of the file
+    hcb = read_hcb(path) 
 
-    # ToDo - determine endian from head_rep field with error checking
-    hcb = read_hcb(path, endian="<")  # Assuming little-endian
-    
     print("=== Header Control Block (HCB) Fields ===")
     for name, _, _, _, desc in HCB_LAYOUT:
         print(f"{name:10s}: {hcb[name]!r}  # {desc}")
@@ -517,31 +522,40 @@ def blue_file_to_sigmf(path):
     print("\n=== Adjunct Header ===")
     print(hcb.get("adjunct", hcb.get("adjunct_raw")))
 
-    # ToDo - determine endian from head_rep field with error checking
-    # Get endian from data_rep
-    # data_rep = hcb.get("data_rep")
-    #     endian = "<" if data_rep == "IEEE" else ">"
-    endian = "<"
+    # data_rep  : 'EEEI' or 'IEEE' # Little or big extended header endianess representation
+    extended_header_endianess = hcb.get("head_rep")
+    
+    if extended_header_endianess == "EEEI":
+        endianess = "<"   # little-endian
+    elif extended_header_endianess == "IEEE":
+        endianess = ">"   # big-endian
+    else:
+        raise ValueError(f"Unknown head_rep value: {extended_header_endianess}")
 
-    ext = parse_extended_header(path, hcb, endian)
+    # Parse extended header entries
+    ext = parse_extended_header(path, hcb, endianess)
     print("\n=== Extended Header Keywords ===")
     for e in ext:
         print(f"{e['tag']:20s}:{e['value']}")
     print(f"Total extended header entries: {len(ext)}")
 
+   # data_rep  : 'EEEI' or 'IEEE' # Little or big data endianess representation
+    data_rep_endianess = hcb.get("data_rep")
+    endianess = "<" if data_rep_endianess == "EEEI" else ">"
+ 
     # Parse key data values    
-    iq_data = parse_data_values(path, hcb, endian)
+    iq_data = parse_data_values(path,hcb,endianess)
 
     # Call the SigMF conversion for metadata generation 
     blue_to_sigmf(hcb, ext, f"{path}.sigmf-data")
 
 if __name__ == "__main__":
     """ Main calls dump blue file contents."""
-    # ToDo - add command line args for filename - cdif or .tmp files
-    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\SceptreTestFile1.cdif'
+    # ToDo - add input args for filename - cdif or .tmp files
+    filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\SceptreTestFile1.cdif'
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\pulse_cx.tmp'
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\sin.tmp' 
-    filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\penny.prm' 
+    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\penny.prm' 
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\keyword_test_file.tmp' 
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\lots_of_keywords.tmp' 
     blue_file_to_sigmf(filename)
