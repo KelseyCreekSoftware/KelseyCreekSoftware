@@ -7,7 +7,7 @@
 # Converts the extracted metadata into SigMF format.
 
 # Author: Don Marshall (with help from AI!)
-# Date: November 6, 2025
+# Date: November 7, 2025
 
 import os
 import json
@@ -58,21 +58,53 @@ TYPE_MAP = {
     "A": (np.dtype("S1"), 1),
 }
 
+# Todo -look at this code and see if can be improved
+def detect_endian(data, layout, probe_fields=("data_size", "version")):
+    """
+    Try to detect endianess by unpacking a few known fields.
+    layout: HCB_LAYOUT (list of tuples: name, offset, size, fmt, desc)
+    probe_fields: tuple of field names to test
+    Returns "<" for little-endian or ">" for big-endian
+    """
+    for endian in ("<", ">"):
+        ok = True
+        for name, offset, size, fmt, desc in layout:
+            if name not in probe_fields:
+                continue
+            raw = data[offset:offset+size]
+            try:
+                val = struct.unpack(endian + fmt, raw)[0]
+                # sanity checks
+                if name == "data_size":
+                    if val <= 0 or val > len(data)*100:  # arbitrary sanity bound
+                        ok = False
+                        break
+                elif name == "version":
+                    if not (0 < val < 10):  # expect small version number
+                        ok = False
+                        break
+            except Exception:
+                ok = False
+                break
+        if ok:
+            return endian
+    # fallback
+    return "<"
+
 def read_hcb(path):
     """Read HCB fields and adjunct block."""
     HEADER_SIZE = 512
-
-    # ToDo - determine endian from head_rep field with error checking
-    # better be 'EEEI' little endian for this first header decode
-    endian="<"
-
+    
     hcb = {}
     with open(path, "rb") as f:
         data = f.read(HEADER_SIZE)
+        endian = detect_endian(data, HCB_LAYOUT)
 
         # Fixed fields
         for name, offset, size, fmt, desc in HCB_LAYOUT:
             raw = data[offset:offset+size]
+            # Unpack based on format
+            # ToDo add error checking for incorrect endianness
             val = struct.unpack(endian+fmt, raw)[0]
             if isinstance(val, bytes):
                 val = val.decode("ascii", errors="replace").strip("\x00 ")
