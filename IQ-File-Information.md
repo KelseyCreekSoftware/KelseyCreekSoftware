@@ -47,12 +47,11 @@ BlueFiles are a file format developed for RF and digital signal processing (DSP)
 
 (Within BLUE / Platinum, internal subtypes (TYPE = 1999, 2000, 3000, 4000, 5000, 6000))
 
-For more information, see  [blue file project notes](Blue-File-1-1-Project-Notes.md).
+For more information, see  [Blue File Project Notes](Blue-File-1-1-Project-Notes.md).
 
 ## Rohde and Schwarz - I/Q Data File Format (iq-tar)
  
- I/Q data is packed in a file with the extension `.iq.tar`. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the
- source of data, e.g. the sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both inside one file. In addition, the
+ I/Q data is packed in a file with the extension `.iq.tar`. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the source of data, e.g. the sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both inside one file. In addition, the
  file format allows you to preview the I/Q data in a web browser, and allows you to include user-specific data.
 
 https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
@@ -62,6 +61,8 @@ The user manual of the IQ Data Recorder has additional information on R&S IQ fil
 https://scdn.rohde-schwarz.com/ur/pws/dl_downloads/dl_common_library/dl_manuals/dl_user_manual/IQR_UserManual_en_12.pdf
 
 *Includes Metadata: Yes*
+
+For more information, see [Rohde and Schwarz Project Notes](Rohde-Schwarz-Project-Notes.md).
 
 ## KeySight - Spectrum Analysis IQ File
 
@@ -184,24 +185,6 @@ After exporting raw I/Q via MATLAB or Python, use the sigmf CLI (pip install sig
 The MISP SigMF module expands a SigMF Recording object into a SigMF Expanded Recording object, and extracts a SigMF archive into a SigMF Recording object.
 
 https://github.com/MISP/misp-modules/blob/main/misp_modules/modules/expansion/sigmf_expand.py
-
-### Rohde and Schwarz I/Q Data Import Export library (daiex)
-
-Daiex is a cross-platform C++ library that provides functions to import and export numeric I/Q data to or from various file formats. The library provides standardized read and write functions that encapsulate all file operations. The following file formats are supported:
-
-|File format| file extension | comment|
-| --- | --- |:------------------------------|
-| iq-tar|	.iq.tar | An iq-tar file contains I/Q data in binary format together with Metadata that describes the nature and the source of data, e.g. sample rate. The objective of the iq-tar file format is to separate I/Q data from the Metadata while still having both in one file. |
-|IQW (IIIQQQ) |	.iqw |	A file that contains Float32 data in a binary format ( first all I values are stored, followed by all Q values ). The file does not contain any additional header information. Note that I and Q data are first buffered to temporary files and are merged when calling close().  |
-| IQW (IQIQIQ)	| .iqw	| A file that contains Float32 data in a binary format ( values are stored in interleaved format, starting with the first I value ). The file does not contain any additional header information. The data order has to be changed before readOpen or writeOpen is called. |
-| WV (IQIQIQ)	| .wv	| A file that contains INT16 data in a binary format ( values are stored in interleaved format, starting with the first I value ). This format is used in signal generators.|
-|IQX (IQIQIQ)	| .iqx	| A file that contains INT16 data in a binary format ( values are stored in interleaved format, starting with the first I value ). This format is used in device IQW.|
-|AID (IQIQIQ)	|.aid	|A file that contains I/Q data in a binary format ( values are stored in interleaved format, starting with the first I value ). This format is used in AMMOS project.|
-|CSV	|.csv	|A file containing I/Q data in comma-separated values format (CSV). The comma-separator used can either be a semicolon or a comma, depending on the decimal separator used to save floating-point values (either dot or comma). Additional Metadata can be saved. For details see class Csv.|
-|Matlab v4	|.mat	|A file containing I/Q data in matlab file format v4. Channel related information is stored in matlab variables with names starting with 'ChX_'. 'X' represents the number of the channel with a lower bound of 1, e.g. variable Ch1_ChannelName contains the name of the first channel. The corresponding data is contained in ChX_Data. |
-|Matlab v7.3	|.mat	|A file containing I/Q data in matlab file format v7.3. It supports the same functionality as matlab v4 file format, but requires the Matlab Compiler Runtime (MCR) to be installed on the system.|
-
-https://github.com/Rohde-Schwarz/daiex
 
 ### Inspectrum
 
