@@ -7,7 +7,7 @@
 # Converts the extracted metadata into SigMF format.
 
 # Author: Don Marshall (with help from AI!)
-# Date: November 7, 2025
+# Date: November 10, 2025
 
 import os
 import json
@@ -16,6 +16,7 @@ import hashlib
 import numpy as np
 from astropy.time import Time
 from sigmf import SigMFFile # Assuming sigmf library is installed
+from datetime import datetime, timezone
 
 
 # --- HCB Layout (fixed fields up to adjunct) ---
@@ -455,11 +456,22 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
             value = value.item()
         global_md[key] = value
   
-    # ToDo - add time conversion from TIME_EPOCH to ISO 8601 format if required
+    # Convert the datetime object to an ISO 8601 formatted string
+    epoch_time_raw = int(hcb.get("timecode", 0))
+
+    # Adjust for Bluefile POSIX epoch (1950 vs 1970)
+    bluefile_epoch_offset = 631152000  # seconds between 1950 and 1970
+    epoch_time = epoch_time_raw - bluefile_epoch_offset
+
+    dt_object_utc = datetime.fromtimestamp(epoch_time, tz=timezone.utc)
+    # Format with milliseconds and Zulu suffix
+    iso_8601_string = dt_object_utc.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+    print(f"Epoch time: {epoch_time}")
+    print(f"ISO 8601 time: {iso_8601_string}")
 
     # --- Captures array ---
     captures = [{
-        "core:datetime": get_tag("TIME_EPOCH"),
+        "core:datetime": iso_8601_string,
         "core:frequency": float(get_tag("RF_FREQ") or 0.0),
         "core:sample_start": 0,
     }]
