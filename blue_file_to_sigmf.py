@@ -7,7 +7,7 @@
 # Converts the extracted metadata into SigMF format.
 
 # Author: Don Marshall (with help from AI!)
-# Date: November 10, 2025
+# Date: November 11, 2025
 
 import os
 import json
@@ -59,13 +59,26 @@ TYPE_MAP = {
     "A": (np.dtype("S1"), 1),
 }
 
-# Todo -look at this code and see if can be improved
+HEADER_SIZE = 512
+BLOCK_SIZE = 512
+
+#  TODO: Look at this code and see if can be improved
 def detect_endian(data, layout, probe_fields=("data_size", "version")):
     """
-    Try to detect endianess by unpacking a few known fields.
-    layout: HCB_LAYOUT (list of tuples: name, offset, size, fmt, desc)
-    probe_fields: tuple of field names to test
-    Returns "<" for little-endian or ">" for big-endian
+    Detect endianness of a Bluefile header.
+
+    Parameters
+    ----------
+    data : bytes
+        Raw header data.
+    layout : list of tuples
+        HCB layout definition (name, offset, size, fmt, desc).
+    probe_fields : tuple of str, optional
+        Field names to test for sanity checks.
+    Returns
+    -------
+    str
+        "<" for little-endian or ">" for big-endian.
     """
     for endian in ("<", ">"):
         ok = True
@@ -76,8 +89,10 @@ def detect_endian(data, layout, probe_fields=("data_size", "version")):
             try:
                 val = struct.unpack(endian + fmt, raw)[0]
                 # sanity checks
+                MAX_DATA_SIZE_FACTOR = 100
+
                 if name == "data_size":
-                    if val <= 0 or val > len(data)*100:  # arbitrary sanity bound
+                    if val <= 0 or val > len(data) * MAX_DATA_SIZE_FACTOR:
                         ok = False
                         break
                 elif name == "version":
@@ -92,9 +107,20 @@ def detect_endian(data, layout, probe_fields=("data_size", "version")):
     # fallback
     return "<"
 
+
 def read_hcb(path):
-    """Read HCB fields and adjunct block."""
-    HEADER_SIZE = 512
+    """Read HCB fields and adjunct block from a Bluefile.
+
+    Parameters
+    ----------
+    path : str
+        Path to the Bluefile.
+
+    Returns
+    -------
+    dict
+        Parsed HCB fields and adjunct metadata.
+    """
     
     hcb = {}
     with open(path, "rb") as f:
@@ -104,16 +130,20 @@ def read_hcb(path):
         # Fixed fields
         for name, offset, size, fmt, desc in HCB_LAYOUT:
             raw = data[offset:offset+size]
+            try:
+                val = struct.unpack(endian + fmt, raw)[0]
+            except struct.error:
+                raise ValueError(f"Failed to unpack field {name} with endian {endian}")
             # Unpack based on format
-            # ToDo add error checking for incorrect endianness
             val = struct.unpack(endian+fmt, raw)[0]
             if isinstance(val, bytes):
                 val = val.decode("ascii", errors="replace").strip("\x00 ")
             hcb[name] = val
 
         # Adjunct parsing
-        f.seek(256)
-        if hcb["type"] == 1000 or 1001:
+        ADJUNCT_OFFSET = 256
+        f.seek(ADJUNCT_OFFSET)
+        if hcb["type"] in (1000, 1001):
             hcb["adjunct"] = {
                 "xstart": struct.unpack(f"{endian}d", f.read(8))[0],
                 "xdelta": struct.unpack(f"{endian}d", f.read(8))[0],
@@ -130,39 +160,48 @@ def read_hcb(path):
                 "yunits": struct.unpack(f"{endian}i", f.read(4))[0],
             }
         else:
-            f.seek(256)
-            hcb["adjunct_raw"] = f.read(256)
+            hcb["adjunct_raw"] = f.read(ADJUNCT_OFFSET)
 
     return hcb 
 
+
 def parse_extended_header(file_path, hcb, endian="<"):
     """Parse extended header keyword records.
-    Args:
-        file_path: Path to BLUE file
-        hcb: Header Control Block containing ext_size and ext_start
-        endian: Endianness ('<' for little-endian, '>' for big-endian)
-        
-    Returns:
-        List of dictionaries containing parsed records
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the Bluefile.
+    hcb : dict
+        Header Control Block containing 'ext_size' and 'ext_start'.
+    endian : str, optional
+        Endianness ('<' for little-endian, '>' for big-endian).
+
+    Returns
+    -------
+    list of dict
+        List of dictionaries containing parsed records.
     """
     if hcb["ext_size"] <= 0:
         return []
     entries = []
     with open(file_path, "rb") as f:
-        f.seek(int(hcb["ext_start"]) * 512)
-        bytesRemaining = int(hcb["ext_size"])
-        while bytesRemaining > 0:
+        f.seek(int(hcb["ext_start"]) * BLOCK_SIZE)
+        bytes_remaining = int(hcb["ext_size"])
+        while bytes_remaining > 0:
             lkey = struct.unpack(f"{endian}i", f.read(4))[0]
             lext = struct.unpack(f"{endian}h", f.read(2))[0]
             ltag = struct.unpack(f"{endian}b", f.read(1))[0]
             type_char = f.read(1).decode("ascii", errors="replace")
 
-            dtype, bytesPerElement = TYPE_MAP.get(type_char, (np.dtype("S1"), 1))
+            dtype, bytes_per_element = TYPE_MAP.get(type_char, (np.dtype("S1"), 1))
             val_len = lkey - lext
-            val_count = val_len // bytesPerElement if bytesPerElement else 0
+            val_count = val_len // bytes_per_element if bytes_per_element else 0
 
             if type_char == "A":
                 raw = f.read(val_len)
+                if len(raw) < val_len:
+                    raise ValueError("Unexpected end of extended header")
                 value = raw.rstrip(b"\x00").decode("ascii", errors="replace")
             else:
                 value = np.frombuffer(f.read(val_len), dtype=dtype, count=val_count)
@@ -181,21 +220,30 @@ def parse_extended_header(file_path, hcb, endian="<"):
                 "tag": tag, "type": type_char, "value": value,
                 "lkey": lkey, "lext": lext, "ltag": ltag
             })
-            bytesRemaining -= lkey
+            bytes_remaining -= lkey
+
     return entries
 
 
 def parse_data_values(path,hcb,endianess):
-    """Parse key HCB values that are used for further processing.
-        Args:
-        path: Path to Blue File
-        hcb: Header Control Block dictionary
-        endianess: Endianness ('<' for little, '>' for big)
-    Returns:
-        numpy.ndarray: Parsed samples
+    """
+    Parse key HCB values used for further processing.
+
+    Parameters
+    ----------
+    path : str
+        Path to the Bluefile.
+    hcb : dict
+        Header Control Block dictionary.
+    endianess : str
+        Endianness ('<' for little-endian, '>' for big-endian).
+
+    Returns
+    -------
+    numpy.ndarray
+        Parsed samples.
     """
 
-    HEADER_SIZE = 512
     SUPPORTED_TYPES = {'CI', 'CL', 'CF', 'SB', 'SI', 'SL', 'SX', 'SF', 'SD'}
     
     print("===== Parsing blue file data values =====")
@@ -208,7 +256,7 @@ def parse_data_values(path,hcb,endianess):
         if dtype not in SUPPORTED_TYPES:
             raise ValueError(f"Unsupported data type: {dtype}")
 
-        # ToDo handle both types 'EEEI'! we'll assume it is from this point on
+        # TODO: handle both types 'EEEI'! we'll assume it is from this point on
         endianness = data[8:12].decode('utf-8') 
         print('Endianness: ', endianness)
         if endianness not in ('EEEI', 'IEEE'):
@@ -253,8 +301,7 @@ def parse_data_values(path,hcb,endianess):
       elem_count = (filesize - extended_header_data_size) // elem_size
       samples = np.fromfile(filename, dtype=np.complex64, offset=HEADER_SIZE, count=elem_count)
  
-    # ToDo - validate handling of scalar types 
-    # Reshape per mathlab port?
+    # TODO: validate handling of scalar types - Reshape per mathlab port shown here?
     """
             fmt_size_char = self.hcb["format"][0]
             fmt_type_char = self.hcb["format"][1]
@@ -269,7 +316,7 @@ def parse_data_values(path,hcb,endianess):
             bytesPerSample = int(elem_bytes) * int(elem_count_per_sample)
 
             bytesRead = int(self.dataOffset - self.hcb["data_start"])
-            bytesRemaining = int(self.hcb["data_size"] - bytesRead)
+            bytes_remaining = int(self.hcb["data_size"] - bytesRead)
 
     """
 
@@ -317,22 +364,36 @@ def parse_data_values(path,hcb,endianess):
  
     # Save out as SigMF IQ data file
     dest_path = filename.rsplit(".",1)[0]
+    # TODO: Handle scalar data saving properly
     samples.astype(np.complex64).tofile(f"{dest_path}.sigmf-data")
+    # Test Output for scalar data - Like this?
+    # samples.tofile(f"{dest_path}.sigmf-data")
 
     return samples
 
 def blue_to_sigmf(hcb, ext_entries, data_path):
     """
-    Build a SigMF metadata dict from parsed BLUE HCB + extended header.
-    Args:
-    hcb: Header Control Block dict from read_hcb()
-    ext_entries: list of dicts from parse_extended_header()
-    data_path: path to the .sigmf-data file
-    Returns:
-        dict: SigMF metadata structure
-    Raises:
-        ValueError: If required fields are missing or invalid
+    Build a SigMF metadata dict from parsed Bluefile HCB and extended header.
+
+    Parameters
+    ----------
+    hcb : dict
+        Header Control Block from read_hcb().
+    ext_entries : list of dict
+        Parsed extended header entries from parse_extended_header().
+    data_path : str
+        Path to the .sigmf-data file.
+    Returns
+    -------
+    dict
+        SigMF metadata structure.
+
+    Raises
+    ------
+    ValueError
+        If required fields are missing or invalid.
     """
+
     # Helper to look up extended header values by tag
     def get_tag(tag):
         for e in ext_entries:
@@ -343,7 +404,7 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
 # S - Scalar
 # C-  Complex
 # V - Vector
-# Q-  Quad - ToDo - add support for other types if they are commonly used.
+# Q-  Quad - TODO: Add support for other types if they are commonly used.
 
 # B: 8-bit integer
 # I: 16-bit integer
@@ -375,7 +436,7 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
         "SL": "ri32_be",
         "SX": "ri64_be",
         "SF": "rf32_be",
-        "SD": "rf642_be",
+        "SD": "rf64_be",
         "CB": "ci8_be",
         "CI": "ci16_be",
         "CL": "ci32_be",
@@ -427,7 +488,7 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
         "core:datatype": datatype,
         "core:description": hcb.get("keywords", ""),
         "core:hw": hardware_description,
-        "core:core:license": blue_licence,
+        "core:license": blue_licence,
         "core:num_channels":channelNumber,
         "core:sample_rate": sample_rate,
         "core:version": "1.0.0",
@@ -515,11 +576,13 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
         "cf32_be": 8,
         "rf32_be": 4,
         "rf64_be": 8,
-        "ri64_ble": 8,
+        "ri64_be": 8,
     }
 
     # Calculate sample count
     data_size = int(hcb.get("data_size", 0))
+    if datatype not in datatype_sizes:
+        raise ValueError(f"Unsupported datatype {datatype}")
     bytes_per_sample = datatype_sizes[datatype]
     sample_count = int(data_size // bytes_per_sample)
 
@@ -550,7 +613,19 @@ def blue_to_sigmf(hcb, ext_entries, data_path):
 
 
 def blue_file_to_sigmf(path):
-    """ Main function to dump blue file contents."""
+    """
+    Convert a MIDIS Bluefile to SigMF metadata and data.
+
+    Parameters
+    ----------
+    path : str
+        Path to the Bluefile.
+
+    Returns
+    -------
+    dict
+        SigMF metadata dictionary.
+    """
 
     print("==========================================")
     print("===== Starting blue file processing =====")
@@ -570,14 +645,14 @@ def blue_file_to_sigmf(path):
     extended_header_endianess = hcb.get("head_rep")
     
     if extended_header_endianess == "EEEI":
-        endianess = "<"   # little-endian
+        ext_endianess = "<"   # little-endian
     elif extended_header_endianess == "IEEE":
-        endianess = ">"   # big-endian
+        ext_endianess = ">"   # big-endian
     else:
         raise ValueError(f"Unknown head_rep value: {extended_header_endianess}")
 
     # Parse extended header entries
-    ext = parse_extended_header(path, hcb, endianess)
+    ext = parse_extended_header(path, hcb, ext_endianess)
     print("\n=== Extended Header Keywords ===")
     for e in ext:
         print(f"{e['tag']:20s}:{e['value']}")
@@ -585,22 +660,29 @@ def blue_file_to_sigmf(path):
 
    # data_rep  : 'EEEI' or 'IEEE' # Little or big data endianess representation
     data_rep_endianess = hcb.get("data_rep")
-    endianess = "<" if data_rep_endianess == "EEEI" else ">"
+    data_endianess = "<" if data_rep_endianess == "EEEI" else ">"
  
     # Parse key data values    
-    iq_data = parse_data_values(path,hcb,endianess)
+    # iq_data will be available if needed for further processing.
+    try:
+        iq_data = parse_data_values(path, hcb, data_endianess)
+    except Exception as e:
+        raise RuntimeError(f"Failed to parse data values: {e}")
 
     # Call the SigMF conversion for metadata generation 
     blue_to_sigmf(hcb, ext, f"{path}.sigmf-data")
 
 if __name__ == "__main__":
-    """ Main calls dump blue file contents."""
-    # ToDo - add input args for filename - cdif or .tmp files
+    # Main calls blue_file_to_sigmf to convert dump blue file contents to SigMF.
+    # TODO: Add input args for filename - cdif or .tmp files
     filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\SceptreTestFile1.cdif'
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\pulse_cx.tmp'
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\sin.tmp' 
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\penny.prm' 
     # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\keyword_test_file.tmp' 
-    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\lots_of_keywords.tmp' 
-    blue_file_to_sigmf(filename)
-    print("DONE")
+    # filename = 'C:\Data1\Ham_Radio\SDR\SigMF-MIDAS-Blue-File-Conversion\PythonDevCode\RustBlueTestFiles\lots_of_keywords.tmp'
+    try:
+        blue_file_to_sigmf(filename)
+        print("DONE")
+    except Exception as e:
+        print(f"Processing failed: {e}")
