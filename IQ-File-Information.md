@@ -51,12 +51,15 @@ For more information, see [Blue File Project Notes](Blue-File-1-1-Project-Notes.
 
 ## SignalHound - Spike software
 
-I/Q data is stored in a .iq file.
+### Zero Span file storage option
+
+For the Zero Span file storage option, I/Q data is stored in a .iq file.
 
 XML data is stored in detached .xml file described in the Spike user manual - https://signalhound.com/sigdownloads/Spike/Spike-User-Manual.pdf
 
 For more information, see [Signal Hound Spike IQ Project Notes](Signal-Hound-Spike-IQ-Project-Notes.md).
 
+*Includes Metadata: Yes*
 
 ## Rohde and Schwarz - I/Q Data File Format (iq-tar)
  
