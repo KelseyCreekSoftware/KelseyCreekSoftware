@@ -47,11 +47,20 @@ BlueFiles are a file format developed for RF and digital signal processing (DSP)
 
 (Within BLUE / Platinum, internal subtypes (TYPE = 1999, 2000, 3000, 4000, 5000, 6000))
 
-For more information, see  [Blue File Project Notes](Blue-File-1-1-Project-Notes.md).
+For more information, see [Blue File Project Notes](Blue-File-1-1-Project-Notes.md).
+
+## SignalHound - Spike software
+
+I/Q data is stored in a .iq file.
+
+XML data is stored in detached .xml file described in the Spike user manual - https://signalhound.com/sigdownloads/Spike/Spike-User-Manual.pdf
+
+For more information, see [Signal Hound Spike IQ Project Notes](Signal-Hound-Spike-IQ-Project-Notes.md).
+
 
 ## Rohde and Schwarz - I/Q Data File Format (iq-tar)
  
- I/Q data is packed in a file with the extension `.iq.tar`. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the source of data, e.g. the sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both inside one file. In addition, the
+I/Q data is packed in a file with the extension `.iq.tar`. An iq-tar file contains I/Q data in binary format together with meta information that describes the nature and the source of data, e.g. the sample rate. The objective of the iq-tar file format is to separate I/Q data from the meta information while still having both inside one file. In addition, the
  file format allows you to preview the I/Q data in a web browser, and allows you to include user-specific data.
 
 https://www.rohde-schwarz.com/us/applications/converting-r-s-i-q-data-files-application-note_56280-35531.html
@@ -289,5 +298,4 @@ https://www.sdrangel.org/iq-files/
 
 https://www.sdrplay.com/iq-demo-files/
 
-
-*Page Updated - November 10 2025*
+*Page Updated - November 14 2025*
