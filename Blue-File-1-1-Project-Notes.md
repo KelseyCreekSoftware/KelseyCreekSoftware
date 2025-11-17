@@ -1,6 +1,6 @@
 # MIDIS Blue File Project Notes
 
-*Updated 11/3/2025*
+*Updated 11/17/2025*
 
 ## Overview
 
@@ -35,8 +35,17 @@ https://github.com/sigmf/sigmf-python/blob/main/docs/source/quickstart.rst
 
 ## ToDo
 
-- Create python code
+- Validate RF file processing
 - Create unit tests
+- Use SigMFValidate to validate created meta data
+- Consider tests to allow support for python versions, such as 3.7 & 3.13 
+- Learn about and test *pip install -sigmf[apps]* 
+
+## Code Guidelines
+
+- Use black utility to clean up white space - line length 120
+
+- PEP 8 when it makes sense
 
 ## Data mapping
 
