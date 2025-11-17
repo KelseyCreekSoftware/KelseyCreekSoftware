@@ -40,6 +40,7 @@ https://github.com/sigmf/sigmf-python/blob/main/docs/source/quickstart.rst
 - Use SigMFValidate to validate created meta data
 - Consider tests to allow support for python versions, such as 3.7 & 3.13 
 - Learn about and test *pip install -sigmf[apps]* 
+- Try apps install for WAV converter - https://github.com/sigmf/sigmf-python/tree/main/sigmf/apps
 
 ## Code Guidelines
 
