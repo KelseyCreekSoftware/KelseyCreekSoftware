@@ -1,6 +1,6 @@
 # Signal Hound Spike IQ Project Notes
 
-*Updated 11-14-2025*
+*Updated 11-17-2025*
 
 ## Resources
 
@@ -30,3 +30,20 @@ from the full sample rate of the receiver. For example, 40MS/s for the BB60C
 
 * SerialNumber – Serial number of the device used in acquisition. 
 * IQFileName – Full file path of the IQ binary file saved by the Spike software on the originating system. 
+
+Notes on data conversion from the Spike User Manual
+
+The binary file contains SampleCount signed 16-bit IQ values. The binary file has little-endian byte 
+ordering. Samples are stored in sequential order as: 
+
+`I1, Q1, I2, Q2 … In, Qn` 
+
+The values are stored as full scale, ranging from -32768 to +32767 representing floating point values 
+between -1.0 and 1.0. To recover the original values, perform the following steps.
+
+1) Read in the binary file to signed 16-bit complex values. 
+2) Convert the full scale 16-bit I and Q integer values into floating point values in the range of -1.0 to 
++1.0. 
+3) Multiply each I and Q value by the inverse of the scale factor in the XML file. 
+4) The IQ samples should now be scaled to mW, where I2 + Q2 = mW.
+ 
