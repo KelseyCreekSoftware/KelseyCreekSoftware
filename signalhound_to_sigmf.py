@@ -17,11 +17,12 @@ from datetime import datetime, timezone, timedelta
 
 # Define constants for Spike
 ENDIANNESS = "<"
-# DATATYPE_SIZE = 4  # bytes per complex int16 sample (2 bytes I + 2 bytes Q)
 DATATYPE = "ci16_le"  # complex short int16 little-endian
+# DATATYPE_SIZE = 4  # bytes per complex int16 sample (2 bytes I + 2 bytes Q)
 
 
 def _to_float(x):
+    """Convert value to float, return None if invalid."""
     try:
         return float(x)
     except Exception:
@@ -29,6 +30,7 @@ def _to_float(x):
 
 
 def _to_int(x):
+    """Convert value to int, return None if invalid."""
     try:
         return int(float(x))
     except Exception:
@@ -36,6 +38,7 @@ def _to_int(x):
 
 
 def _parse_preview_trace(text):
+    """Parse PreviewTrace string into list of floats."""
     if text is None:
         return []
     s = text.strip()
@@ -61,7 +64,7 @@ def read_spike_xml(xml_file_path):
 
     Parameters
     ----------
-    file_path : str or Path
+    xml_file_path : str or Path
         Path to the Spike XML file.
 
     Returns
@@ -93,6 +96,8 @@ def read_spike_xml(xml_file_path):
         md[f"{tag}_raw"] = text_of(tag)
     print(md)
 
+    # TODO: Consider data type conversion and validation
+    
     # Typed fields / normalized
     md["DataType"] = md.pop("DataType_raw")
     md["DeviceType"] = md.pop("DeviceType_raw")
@@ -119,7 +124,7 @@ def read_spike_xml(xml_file_path):
 
 def spike_to_sigmf_metadata(spike_xml, xml_file_path):
     """
-    Build a SigMF metadata dict from parsed spikefile spike_xml and extended header.
+    Build a SigMF metadata dict from parsed spikefile spike_xml.
 
     Parameters
     ----------
@@ -155,13 +160,19 @@ def spike_to_sigmf_metadata(spike_xml, xml_file_path):
     # complex 16-bit integer  IQ data > ci16_le in SigMF
     elem_size = np.dtype(np.int16).itemsize
 
-    # Calculate sample count
 
-    filesize = os.path.getsize(xml_file_path)
+    # Strip the extension from the original file path
+    base_file_name = os.path.splitext(xml_file_path)[0]
+
+    # Build the .iq file path for data file
+    data_file_path = base_file_name + ".iq"
+
+    # Calculate sample count using the original IQ data file size
+    filesize = os.path.getsize(data_file_path)
     print("File size: ", filesize)
 
     # Each complex sample = 2 int16 (I,Q)
-    sample_count = filesize // elem_size
+    sample_count = filesize // (2 * elem_size)
     print(f"Sample count: {sample_count}")
 
     # For now define static values. Perhaps take as JSON input
@@ -174,13 +185,16 @@ def spike_to_sigmf_metadata(spike_xml, xml_file_path):
 
     # TODO: see if this can be simplified and add error checking
     # Convert the datetime object to an ISO 8601 formatted string
-    epoch_time = int(spike_xml.get("EpochNanos"))
+    epoch_time = spike_xml.get("EpochNanos")
+    if epoch_time is None:
+        raise ValueError("Missing EpochNanos in Spike XML")
+    epoch_time = int(epoch_time)
     secs = epoch_time // 1_000_000_000
     rem_ns = epoch_time % 1_000_000_000
     dt_object_utc = datetime.fromtimestamp(secs, tz=timezone.utc) + timedelta(
         microseconds=rem_ns / 1000
     )
-    # Format with milliseconds and Zulu suffix
+    # Format with milliseconds and Zulu suffix for SigMF    
     iso_8601_string = dt_object_utc.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
     print(f"Epoch time: {epoch_time}")
     print(f"ISO 8601 time: {iso_8601_string}")
@@ -195,12 +209,12 @@ def spike_to_sigmf_metadata(spike_xml, xml_file_path):
         "core:num_channels": channelNumber,
         "core:sample_rate": spike_xml.get("SampleRate"),
         "core:version": "1.0.0",
-        # TODO: Validate data types below
-        "core:spike_": spike_xml.get("ReferenceLevel"),
-        "core:spike_": spike_xml.get("Decimation"),
-        "core:spike_": spike_xml.get("IFBandwidth"),
-        "core:spike_": spike_xml.get("ScaleFactor"),
-        "core:spike_": spike_xml.get("IQFileName"),
+        # TODO: Confirm / validate data types below in generated SigMF
+        "core:spike_ReferenceLevel": spike_xml.get("ReferenceLevel"),
+        "core:spike_Decimation": spike_xml.get("Decimation"),
+        "core:spike_IFBandwidth": spike_xml.get("IFBandwidth"),
+        "core:spike_ScaleFactor": spike_xml.get("ScaleFactor"),
+        "core:spike_IQFileName": spike_xml.get("IQFileName"),
     }
 
     # --- Captures array ---
@@ -222,29 +236,25 @@ def spike_to_sigmf_metadata(spike_xml, xml_file_path):
                 h.update(chunk)
         return h.hexdigest()
 
-    # Strip the extension from the original file path
-    base_file_name = os.path.splitext(xml_file_path)[0]
-
-    # Build the .sigmf-data path
-    data_file_path = base_file_name + ".sigmf-data"
-
     # Compute SHA-512 of the data file
+    # TODO: Determine if we need to hash the .iq or .sigmf-data file 
+    # and for that matter if we need to even recreate the .sigmf-data file
     data_sha512 = compute_sha512(data_file_path)  # path to the .sigmf-data file
     global_md["core:sha512"] = data_sha512
 
-    # TODO: Confirm freq_upper_edge calculation - is this correct for Spike files? ScaleFactor? Mhz? /2?
-    upper_frequency_edge = float(spike_xml.get("CenterFrequency")) + float(
-        spike_xml.get("IFBandwidth")
-    )
-    # TODO: Confirm freq_upper_edge calculation - is this correct for Spike files? ScaleFactor? Mhz?
-    lower_freq_lower_edge = float(spike_xml.get("CenterFrequency") or 0.0)
+    # TODO: Confirm freq_upper_edge and  lower_frequency_edge calculations - is this correct for Spike files? ScaleFactor? Mhz? /2?
+    center = float(spike_xml.get("CenterFrequency") or 0.0)
+    bandwidth = float(spike_xml.get("IFBandwidth") or 0.0)
+    upper_frequency_edge = center + (bandwidth / 2.0)
+    lower_frequency_edge = center - (bandwidth / 2.0)
 
+    # --- Create annotations array using calculated values---
     annotations = [
         {
             "core:sample_start": 0,
             "core:sample_count": sample_count,
             "core:freq_upper_edge": upper_frequency_edge,
-            "core:freq_lower_edge": lower_freq_lower_edge,
+            "core:freq_lower_edge": lower_frequency_edge,
             "core:label": "Spike",
         }
     ]
@@ -285,7 +295,9 @@ def convert_data_values(spike_xml, xml_file_path):
     """
 
     print("===== Parsing spike file data values =====")
-    filesize = os.path.getsize(xml_file_path)
+    base_file_name = os.path.splitext(xml_file_path)[0]
+    iq_file_path = base_file_name + ".iq"
+    filesize = os.path.getsize(iq_file_path)
     print("File size: ", filesize)
 
     # Determine destination path for SigMF data file
@@ -302,7 +314,7 @@ def convert_data_values(spike_xml, xml_file_path):
     print("Sample rate: ", sample_rate / 1e6, "MHz")
 
     # Read raw interleaved int16 IQ
-    samples = np.fromfile(xml_file_path, dtype=np.int16, offset=0, count=elem_count)
+    samples = np.fromfile(iq_file_path, dtype=np.int16, offset=0, count=elem_count)
 
     # Write directly to SigMF data file (no normalization)
     samples.tofile(dest_path + ".sigmf-data")
@@ -371,3 +383,4 @@ if __name__ == "__main__":
         print("DONE")
     except Exception as e:
         print(f"Processing failed: {e}")
+        
