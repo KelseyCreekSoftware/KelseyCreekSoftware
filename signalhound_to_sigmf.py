@@ -5,7 +5,7 @@
 # This for Zero span Spike .iq and .xml files
 
 # Author: Don Marshall (with help from AI!)
-# Date: November 17, 2025
+# Date: November 18, 2025
 
 import os
 import json
@@ -81,43 +81,49 @@ def read_spike_xml(xml_file_path):
         return el.text.strip() if (el is not None and el.text is not None) else None
 
     md = {}
-    # Raw strings for auditing
+    # Signal Hound data elements
     for tag in (
-        "DataType",
         "DeviceType",
-        "CenterFrequency",
-        "SampleCount",
-        "EpochNanos",
-        "SampleRate",
-        "IQFileName",
         "SerialNumber",
+        "DataType",
+        "ReferenceLevel",
+        "CenterFrequency",
+        "SampleRate",
+        "Decimation",
+        "IFBandwidth",
+        "ScaleFactor",
+        "IQFileName",
+        "EpochNanos",
+        "SampleCount",
         "PreviewTrace",
     ):
         md[f"{tag}_raw"] = text_of(tag)
-    print(md)
+    
+    # Optional print of data for debug >> 
+    # print(md)
 
-    # TODO: Consider data type conversion and validation
+    # TODO: Consider additonal data type conversion and validation
     
     # Typed fields / normalized
     md["DataType"] = md.pop("DataType_raw")
     md["DeviceType"] = md.pop("DeviceType_raw")
-    md["CenterFrequency"] = _to_float(text_of("CenterFrequency"))
-    md["SampleCount"] = _to_int(text_of("SampleCount"))
-    md["SampleRate"] = _to_float(text_of("SampleRate"))
-    md["EpochNanos"] = _to_int(text_of("EpochNanos"))
+    md["CenterFrequency"] = _to_float(md.pop("CenterFrequency_raw"))
+    md["SampleCount"] = _to_int(md.pop("SampleCount_raw"))
+    md["SampleRate"] = _to_float(md.pop("SampleRate_raw"))
+    md["EpochNanos"] = _to_int(md.pop("EpochNanos_raw"))
     # Will be added as comments or annotations
-    md["ReferenceLevel"] = _to_float(text_of("ReferenceLevel"))
-    md["Decimation"] = _to_int(text_of("Decimation"))
-    md["IFBandwidth"] = _to_float(text_of("IFBandwidth"))
-    md["ScaleFactor"] = _to_float(text_of("ScaleFactor"))
+    md["ReferenceLevel"] = _to_float(md.pop("ReferenceLevel_raw"))
+    md["Decimation"] = _to_int(md.pop("Decimation_raw"))
+    md["IFBandwidth"] = _to_float(md.pop("IFBandwidth_raw"))
+    md["ScaleFactor"] = _to_float(md.pop("ScaleFactor_raw"))
     md["SerialNumber"] = md.pop("SerialNumber_raw")
     md["IQFileName"] = md.pop("IQFileName_raw")
 
     # PreviewTrace: list of floats and numpy array (float32)
-    # TODO: Confirm data type for preview data elements.
+    # TODO: Confirm np.int16 data type for preview data elements.
     preview_raw = text_of("PreviewTrace")
     md["PreviewTrace_list"] = _parse_preview_trace(preview_raw)
-    md["PreviewTrace_array"] = np.array(md["PreviewTrace_list"], dtype=np.float32)
+    md["PreviewTrace_array"] = np.array(md["PreviewTrace_list"], dtype=np.int16)
 
     return md
 
@@ -148,7 +154,7 @@ def spike_to_sigmf_metadata(spike_xml, xml_file_path):
     spike_data_type = spike_xml.get("DataType")
 
     if spike_data_type == "Complex Short":
-        DataType= "ci16_le"  # complex int16 little-endian
+        data_type= "ci16_le"  # complex int16 little-endian
     else:
         raise ValueError(f"Unsupported Spike DataType: {spike_data_type}")
 
@@ -157,8 +163,6 @@ def spike_to_sigmf_metadata(spike_xml, xml_file_path):
         device_type if device_type is not None else "Signal Hound Device"
     )
 
-    # complex 16-bit integer  IQ data > ci16_le in SigMF
-    elem_size = np.dtype(np.int16).itemsize
 
 
     # Strip the extension from the original file path
@@ -171,17 +175,26 @@ def spike_to_sigmf_metadata(spike_xml, xml_file_path):
     filesize = os.path.getsize(data_file_path)
     print("File size: ", filesize)
 
-    # Each complex sample = 2 int16 (I,Q)
-    sample_count = filesize // (2 * elem_size)
-    print(f"Sample count: {sample_count}")
+    # complex 16-bit integer  IQ data > ci16_le in SigMF
+    elem_size = np.dtype(np.int16).itemsize
 
-    # For now define static values. Perhaps take as JSON input
+    # Each complex sample = 2 int16 (I,Q)
+    frame_bytes = 2 * elem_size
+    if filesize % frame_bytes != 0:
+        raise ValueError(f"File size {filesize} not divisible by {frame_bytes}; partial sample present")
+
+    # Each complex sample = 2 int16 (I,Q)
+    sample_count = filesize // frame_bytes
+
+    print(f"Sample count: {sample_count}")
+   
+    # For now define static values. Perhaps take as JSON or command arg input in the future
     spike_author = "Spike File Conversion - Unknown Author"
     spike_licence = "Spike File Conversion - Unknown License"
     spike_description = "Signal Hound Spike Zero Span File converted to SigMF format"
 
     # TODO: Confirm Zero Span Spike files are single channel
-    channelNumber = 1
+    channel_number = 1
 
     # TODO: see if this can be simplified and add error checking
     # Convert the datetime object to an ISO 8601 formatted string
@@ -202,14 +215,13 @@ def spike_to_sigmf_metadata(spike_xml, xml_file_path):
     # --- Base Global Metadata ---
     global_md = {
         "core:author": spike_author,
-        "core:datatype": DataType,
+        "core:datatype": data_type,
         "core:description": spike_description,
         "core:hw": hardware_description,
         "core:license": spike_licence,
-        "core:num_channels": channelNumber,
+        "core:num_channels": channel_number,
         "core:sample_rate": spike_xml.get("SampleRate"),
         "core:version": "1.0.0",
-        # TODO: Confirm / validate data types below in generated SigMF
         "core:spike_ReferenceLevel": spike_xml.get("ReferenceLevel"),
         "core:spike_Decimation": spike_xml.get("Decimation"),
         "core:spike_IFBandwidth": spike_xml.get("IFBandwidth"),
@@ -319,6 +331,8 @@ def convert_data_values(spike_xml, xml_file_path):
     # Write directly to SigMF data file (no normalization)
     samples.tofile(dest_path + ".sigmf-data")
 
+    print(f"==== Wrote SigMF data to {dest_path + '.sigmf-data'} ====")
+
     # Reassemble interleaved IQ samples
     # samples = raw_samples[::2] + 1j*raw_samples[1::2] # convert to IQIQIQ...
 
@@ -337,8 +351,8 @@ def spike_zero_span_to_sigmf_converter(xml_file_path):
 
     Returns
     -------
-    samples : numpy.ndarray
-        IQ Data.
+    samples : iq_data
+        IQ Data - raw int16 array (interleaved I/Q)
     """
 
     print("==========================================")
@@ -349,35 +363,42 @@ def spike_zero_span_to_sigmf_converter(xml_file_path):
     try:
         spike_xml = read_spike_xml(xml_file_path)
     except Exception as e:
-        raise RuntimeError(f"Failed to parse data values: {e}")
+        raise RuntimeError(f"Failed to parse XML values: {e}")
 
     # Call the SigMF conversion for metadata generation
     spike_to_sigmf_metadata(spike_xml, xml_file_path)
-
-    """
-    
+  
     # Convert IQ data for Zero span Spike file   
     # iq_data will be available if needed for further processing.
+    base_file_name = os.path.splitext(xml_file_path)[0]
+    iq_file_path = base_file_name + ".iq"
     try:
         iq_data = convert_data_values(spike_xml, iq_file_path)
     except Exception as e:
-        raise RuntimeError(f"Failed to parse data values: {e}")
+        raise RuntimeError(f"Failed to convert or parse IQ data values: {e}")
 
     # Return the IQ data if needed for plotting, or further processing if needed 
     return iq_data
-    """
-
 
 if __name__ == "__main__":
     # Main calls spike_file_to_sigmf to convert dump spike file contents to SigMF.
     import argparse
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("spike_xml_file")
+    parser = argparse.ArgumentParser(
+        description="Convert Signal Hound Spike Zero Span .xml and .iq files to SigMF format"
+    )
+    parser.add_argument(
+        "spike_xml_file",
+        nargs="?",
+        default=r"C:\Data1\Ham_Radio\SDR\signalhound_to_sigmf_converter\IQREC-11-13-25-17h31m10s877.xml",
+        help="Path to the Signal Hound Spike Zero Span .xml file (the matching .iq file must be present)",
+        )
     # Uncomment for passing input args for file name - cdif or .tmp files
-    # args = parser.parse_args()
-    xml_file_path = "C:\Data1\Ham_Radio\SDR\signalhound_to_sigmf_converter\IQREC-11-13-25-17h31m10s877.xml"
-    iq_file_path = "C:\Data1\Ham_Radio\SDR\signalhound_to_sigmf_converter\IQREC-11-13-25-17h31m10s877.iq"
+    args = parser.parse_args()
+    xml_file_path = args.spike_xml_file
+    # Example hardcoded file paths for testing
+    # xml_file_path = "C:\Data1\Ham_Radio\SDR\signalhound_to_sigmf_converter\IQREC-11-13-25-17h31m10s877.xml"
+    # iq_file_path = "C:\Data1\Ham_Radio\SDR\signalhound_to_sigmf_converter\IQREC-11-13-25-17h31m10s877.iq"
     try:
         spike_zero_span_to_sigmf_converter(xml_file_path)
         print("DONE")
