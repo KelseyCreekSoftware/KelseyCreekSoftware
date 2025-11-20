@@ -1,10 +1,14 @@
 # Signal Hound Spike IQ Project Notes
 
-*Updated 11-17-2025*
+*Updated 11-20-2025*
 
 ## Resources
 
 Spike-User-Manual.pdf - https://signalhound.com/sigdownloads/Spike/Spike-User-Manual.pdf
+
+A GNU Radio OOT module for Signal Hound Devices - gr-signal-hound 
+
+https://github.com/SignalHound/gr-signal-hound
 
 ## XML Signal Attributes
 
