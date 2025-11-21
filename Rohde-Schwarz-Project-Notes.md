@@ -1,5 +1,6 @@
 # Rohde and Schwarz Converter Project Information
-*Updated November 10, 2025*
+
+*Updated November 20, 2025*
 
 ## Rohde & Schwarz "example files"
 
@@ -7,9 +8,20 @@ I/Q Waveform File Conversion for Use with Precise Broadcast Signal Generators in
 
 https://www.rohde-schwarz.com/sg/applications/i-q-waveform-file-conversion-for-use-with-precise-broadcast-signal-generators-application-note_56280-15603.html
 
+# RsWaveform
+
+Load, manipulate and save R&S waveform files.
+
+https://github.com/Rohde-Schwarz/RsWaveform
+
 ## Rohde and Schwarz I/Q Data Import Export library (daiex)
 
-Daiex is a cross-platform C++ library that provides functions to import and export numeric I/Q data to or from various file formats. The library provides standardized read and write functions that encapsulate all file operations. The following file formats are supported:
+Daiex is a cross-platform C++ library that provides functions to import and export numeric I/Q data to or from various file formats. 
+
+https://github.com/Rohde-Schwarz/daiex
+
+The library provides standardized read and write functions that encapsulate all file operations. The following file formats are supported:
+
 
 |File format| file extension | comment|
 | --- | --- |:------------------------------|
@@ -23,7 +35,7 @@ Daiex is a cross-platform C++ library that provides functions to import and expo
 |Matlab v4	|.mat	|A file containing I/Q data in matlab file format v4. Channel related information is stored in matlab variables with names starting with 'ChX_'. 'X' represents the number of the channel with a lower bound of 1, e.g. variable Ch1_ChannelName contains the name of the first channel. The corresponding data is contained in ChX_Data. |
 |Matlab v7.3	|.mat	|A file containing I/Q data in matlab file format v7.3. It supports the same functionality as matlab v4 file format, but requires the Matlab Compiler Runtime (MCR) to be installed on the system.|
 
-https://github.com/Rohde-Schwarz/daiex
+
 
 ## aaronia support for IQ TAR
 
