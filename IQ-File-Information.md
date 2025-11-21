@@ -34,6 +34,10 @@ An older OOT module for sigmf. This module contains blocks to read from and writ
 
 https://github.com/skysafe/gr-sigmf
 
+### RFML SigMF data manipulation
+
+https://github.com/IQTLabs/rfml/blob/main/rfml/data.py
+
 ## XMidas Blue format files 
 
 BlueFiles are a file format developed for RF and digital signal processing (DSP) data storage. 
