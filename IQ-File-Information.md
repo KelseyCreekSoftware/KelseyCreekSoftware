@@ -88,6 +88,44 @@ For more information, see [Anritsu Project Notes](Anritsu_Project-Notes.md).
 
 *Includes Metadata: TBD*
 
+## Tektronix  
+
+Some Tektronix test equipment has the ability to export RF data.
+
+*Includes Metadata: Some*
+
+```
+Record Length	2.50E+03		-0.125	0.002
+Sample Interval	1.00E-04		-0.1249	0.002
+Trigger Point	1.25E+03		-0.1248	0.004
+			-0.1247	0.002
+			-0.1246	0.004
+			-0.1245	0.008
+Source	CH1		-0.1244	0
+Vertical Units	V		-0.1243	0.004
+Vertical Scale	5.00E-02		-0.1242	0.002
+Vertical Offset	0.00E+00		-0.1241	0.006
+Horizontal Units	s		-0.124	-0.002
+Horizontal Scale	2.50E-02		-0.1239	0.008
+Pt Fmt	Y		-0.1238	0
+Yzero	0.00E+00		-0.1237	0.008
+Probe Atten	1.00E+01		-0.1236	0.002
+Model Number	TBS1052B		-0.1235	0
+Serial Number	C044284		-0.1234	0.008
+Firmware Version	FV:v4.06		-0.1233	0.006
+			-0.1232	0.008
+			-0.1231	-0.002
+			-0.123	-0.002
+			-0.1229	-0.008
+			-0.1228	-0.004
+			-0.1227	-0.002
+			-0.1226	-0.002
+			-0.1225	0.01
+			-0.1224	0.006
+			-0.1223	0
+			-0.1222	0.002
+```
+
 ## KeySight - Spectrum Analysis IQ File
 
 ### IQ Baseband File Formats Used by Keysight Spectrum Analyzers
