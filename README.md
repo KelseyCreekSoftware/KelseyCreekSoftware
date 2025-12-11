@@ -54,7 +54,14 @@ https://greatscottgadgets.com/sdr/11/
 Overview of Open Datasets for RF Signal Classification
 https://panoradio-sdr.de/overview-of-open-datasets-for-rf-signal-classification/
 
+iq_tool - A vibe coded command-line tool for resampling, filtering, shifting, and correcting I/Q data streams.
+https://github.com/pclov3r/iq_tool
 
+## RF ML
+
+### gamutRF
+
+gamutRF is a gnuradio-based SDR-based scanner, I/Q signal collector and identifier (using a image or I/Q based pyTorch model) - https://github.com/IQTLabs/gamutRF
 
 <!---
 KelseyCreekSoftware/KelseyCreekSoftware is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
