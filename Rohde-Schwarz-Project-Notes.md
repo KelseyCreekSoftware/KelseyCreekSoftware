@@ -8,6 +8,20 @@ I/Q Waveform File Conversion for Use with Precise Broadcast Signal Generators in
 
 https://www.rohde-schwarz.com/sg/applications/i-q-waveform-file-conversion-for-use-with-precise-broadcast-signal-generators-application-note_56280-15603.html
 
+### DAIEX library as test resources
+
+As part of the DAIEX library as test resources folder contains a number of samples.
+
+https://github.com/Rohde-Schwarz/daiex/tree/master/test/res
+
+### IEEE *DataPort* Crawdad IQ samples
+
+A free IEEE login is requird to access these recordings. For example:
+
+CRAWDAD up/rf_recordings
+
+https://ieee-dataport.org/open-access/crawdad-uprfrecordings
+
 # RsWaveform
 
 Load, manipulate and save R&S waveform files.
