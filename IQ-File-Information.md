@@ -78,6 +78,9 @@ https://scdn.rohde-schwarz.com/ur/pws/dl_downloads/dl_common_library/dl_manuals/
 
 *Includes Metadata: Yes*
 
+Numerous example test files here:
+https://github.com/Rohde-Schwarz/daiex/tree/master/test/res
+
 For more information, see [Rohde and Schwarz Project Notes](Rohde-Schwarz-Project-Notes.md).
 
 ## Anritsu 
@@ -192,6 +195,10 @@ ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with 
 
 https://pypi.org/project/itusm2117/
 
+The IEEE dataport provides this HDF5 set, where IEEE dataport membership is required.
+
+https://ieee-dataport.org/documents/adaptive-bit-loading-ofdm-dataset
+
 ## Rockwell Collins
 
 Rockwell Collins’ tactical signal receivers offer an optional Data Storage Unit - DSU. The DSU records raw I/Q at selectable sample rates. The data is stored in a proprietary container or a straight binary dump (.iq/.dat).
@@ -203,6 +210,20 @@ The  Raw Binary Dump Format is consecutive I/Q pairs. It is usually 16-bit signe
 Filename template: `<MODEL>_<SRATE>_<YYYYMMDD>_<HHMMSS>[_segXX].wfs`
 
 *Includes Metadata: No*
+
+## IQT files
+
+The IEEE Antennas and Propagation Society (https://ieeeaps.org/) and the IEEE datashare provides some signal datasets, such as the University of Portland Crawdad RF IQT set.
+
+https://ieee-dataport.org/open-access/crawdad-uprfrecordings
+
+## Kraken DOA SDR
+
+*Not validated*
+
+Linux command line program to connect to the Kraken Software Defined Radio (SDR) In-Phase / Quadrature Phase (IQ) packet ethernet server and convert packets to SigMF compliant data file for storage. 
+
+https://github.com/bshelters/krakenSDR_sigmf
 
 ## WAV Audio Files
 
