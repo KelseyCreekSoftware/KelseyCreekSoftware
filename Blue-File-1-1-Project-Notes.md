@@ -1,6 +1,6 @@
 # MIDIS Blue File Project Notes
 
-*Updated 11/17/2025*
+*Updated 12/20/2025*
 
 ## Overview
 
@@ -16,6 +16,12 @@ For a handy html listing of the blue file elements.
 
 - https://sigplot.lgsinnovations.com/html/doc/bluefile.html
 - http://nextmidas.techma.com/nm/htdocs/usersguide/BlueFiles.html
+
+## Current production blue converter code
+
+The current production converter code is located here, in the feature blue branch:
+
+https://github.com/sigmf/sigmf-python/blob/feature/blue/sigmf/convert/blue.py
 
 ## Goal
 
