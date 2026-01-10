@@ -1,0 +1,36 @@
+# Kraken SDR
+
+# Kraken SDR 
+
+*Updated 1-10-26*
+
+## SDR KrakenSDR Overview
+
+KrakenSDR a 5-RX-channel coherent software defined radio for applications such as radio direction finding and passive radar.
+
+(KrakenSDR - $749.00)
+https://www.krakenrf.com/product-page/krakensdr
+
+(Matched antennas)
+https://www.krakenrf.com/product-page/krakentenna-set-of-five
+
+It uses a phone App, that has to be configured and takes some time to learn how to use.
+https://github.com/krakenrf/krakensdr_docs/wiki/06.-Android-&-iOS-App-Guide
+
+## Notes on Kraken Ethernet Packet Content
+
+https://github.com/bshelters/krakenSDR_sigmf/blob/main/KrakenSDR-Ethernet-Notes-v1.pdf
+
+## Converter for Ethernet Stream
+
+https://github.com/bshelters/krakenSDR_sigmf
+
+https://github.com/bshelters/krakenSDR_sigmf/blob/main/src/krakenrf_sigmf.cpp
+
+## GNU Radio Block for KrakenSDR
+
+This is a GNU Radio Block for KrakenSDR. It connects via a TCP socket connection to the KrakenSDR DAQ server software called Heimdall. 
+Heimdall handles all sample and phase coherence calibration via the noise source, 
+and this block receives the coherent IQ sample output and makes it available for further DSP processing in GNU Radio.
+
+https://github.com/krakenrf/gr-krakensdr
