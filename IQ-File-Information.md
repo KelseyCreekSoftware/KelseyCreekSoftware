@@ -89,6 +89,12 @@ https://github.com/Rohde-Schwarz/daiex/tree/master/test/res
 
 For more information, see [Rohde and Schwarz Project Notes](Rohde-Schwarz-Project-Notes.md).
 
+## Kraken SDR
+
+KrakenSDR a 5-RX-channel coherent software defined radio for applications such as radio direction finding and passive radar.
+
+For more information, see [Kraken SDR Project Notes](Kracken-SDR-Project-Notes.md).
+
 ## Anritsu 
 
 Some Anritsu test equipment has the ability to export RF data.
