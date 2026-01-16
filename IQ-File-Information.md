@@ -91,7 +91,7 @@ For more information, see [Rohde and Schwarz Project Notes](Rohde-Schwarz-Projec
 
 ## Kraken SDR
 
-KrakenSDR a 5-RX-channel coherent software defined radio for applications such as radio direction finding and passive radar.
+The KrakenSDR is a 5-RX-channel coherent software defined radio for applications such as radio direction finding and passive radar.
 
 For more information, see [Kraken SDR Project Notes](Kracken-SDR-Project-Notes.md).
 
