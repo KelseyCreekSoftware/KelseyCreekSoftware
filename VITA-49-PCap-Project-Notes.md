@@ -11,12 +11,19 @@ https://www.vita.com/page-1855484
 
 Includes Metadata: Yes
 
+## DIFI 
+
+DIFI is described as a packet protocol for transmitting digitized IF/IQ data. It is a Digital IF Interoperability Standard published as IEEE‑ISTO Std 4900‑2021
+
+For more information, see this GNURadio talk - https://events.gnuradio.org/event/18/contributions/249/attachments/69/227/GRCon22%20DIFI%20Talk.pdf
+
 ## Possible Resources
 
 - ZMQ Stream
 - PCap Capture
-- GNU Radio Blocks
+- DIFI Utilities and GNU Radio Blocks
+https://github.com/DIFI-Consortium/rfnoc-difi
 
-## Variants
+## Other Variants
 
 TBD
