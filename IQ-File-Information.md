@@ -201,6 +201,10 @@ https://www.vita.com/page-1855484
 
 *Includes Metadata: Yes*
 
+### PCap files
+
+VITA RF can be saved out as a PCap file. For more information, see [VITA-49 PCap Project Notes.md](VITA-49-PCap-Project-Notes.md).
+
 ## HDF5
 
 ITU-R SM.2117-0 is a data format definition for exchanging stored I/Q data with the intention of spectrum monitoring. Key Bridge Wireless supports the ITU in creating a library for the data format as a contribution to IEEE 1900.8 Working Group. This is an HDF5 read-write Python library for the data format in Recommendation ITU-R SM.2117-0.
