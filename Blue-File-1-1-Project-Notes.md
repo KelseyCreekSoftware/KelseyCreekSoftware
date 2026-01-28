@@ -1,6 +1,6 @@
 # MIDIS Blue File Project Notes
 
-*Updated 12/20/2025*
+*Updated 1/28/2025*
 
 ## Overview
 
@@ -17,15 +17,16 @@ For a handy html listing of the blue file elements.
 - https://sigplot.lgsinnovations.com/html/doc/bluefile.html
 - http://nextmidas.techma.com/nm/htdocs/usersguide/BlueFiles.html
 
-## Current production blue converter code
+## Production blue converter code
 
-The current production converter code is located here, in the feature blue branch:
+The blue converter code is located here:
 
-https://github.com/sigmf/sigmf-python/blob/feature/blue/sigmf/convert/blue.py
+[https://github.com/sigmf/sigmf-python/blob/feature/blue/sigmf/convert/blue.py](https://github.com/sigmf/sigmf-python/tree/main/sigmf/convert)
 
-## Goal
 
-*Create a python script similar to these to covert Blue 1.1 files to SigMF*
+## Notes
+
+*Simlar converters*
 
 https://github.com/IQEngine/IQEngine/blob/main/api/converters/vita49_to_sigmf/vita49.py
 
@@ -41,11 +42,10 @@ https://github.com/sigmf/sigmf-python/blob/main/docs/source/quickstart.rst
 
 ## ToDo
 
-- Validate RF file processing
-- Create unit tests
+- Expand unit tests
 - Use SigMFValidate to validate created meta data
 - Consider tests to allow support for python versions, such as 3.7 & 3.13 
-- Learn about and test *pip install -sigmf[apps]* 
+- Test end to end with *pip install -sigmf[apps]* 
 - Try apps install for WAV converter - https://github.com/sigmf/sigmf-python/tree/main/sigmf/apps
 
 ## Code Guidelines
@@ -529,7 +529,7 @@ Under construction
         return mapping[formatSize]
 ```
 
-### 
+### xmidas_blue_reader.py
 
 ```python
 # xmidas_blue_reader.py
