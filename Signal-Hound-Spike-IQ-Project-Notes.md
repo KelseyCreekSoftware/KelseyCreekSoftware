@@ -4,7 +4,7 @@
 
 ## Code status
 
-- Have moved stand alone code into sigmf code tree
+- Have moved stand alone code into local copy of sigmf code tree to integrate into convert command line __main__.py.
 - Need to locate multi channel IQ file to see how it is structured and determine how to convert to SigMF archive format.
 
 ## Resources
