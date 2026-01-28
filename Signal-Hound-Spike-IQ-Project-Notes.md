@@ -1,6 +1,11 @@
 # Signal Hound Spike IQ Project Notes
 
-*Updated 11-20-2025*
+*Updated 1-28-2026*
+
+## Code status
+
+- Have moved stand alone code into sigmf code tree
+- Need to locate multi channel IQ file to see how it is structured and determine how to convert to SigMF archive format.
 
 ## Resources
 
