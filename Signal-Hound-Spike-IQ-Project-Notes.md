@@ -6,6 +6,7 @@
 
 - Have moved stand alone code into local copy of sigmf code tree to integrate into convert command line __main__.py.
 - Have reviewed all 1408 lines of sigmffile.py to better understand intergration when coding a converter.
+- Converter docs are at: https://sigmf.readthedocs.io/en/latest/converters.html
 - Need to locate multi channel IQ file to see how it is structured and determine how to convert to SigMF archive format.
 
 ## Resources
