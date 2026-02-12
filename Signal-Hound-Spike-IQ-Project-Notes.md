@@ -1,10 +1,11 @@
 # Signal Hound Spike IQ Project Notes
 
-*Updated 1-28-2026*
+*Updated 2-12-2026*
 
 ## Code status
 
 - Have moved stand alone code into local copy of sigmf code tree to integrate into convert command line __main__.py.
+- Have reviewed all 1408 lines of sigmffile.py to better understand intergration when coding a converter.
 - Need to locate multi channel IQ file to see how it is structured and determine how to convert to SigMF archive format.
 
 ## Resources
