@@ -1,6 +1,6 @@
 # Signal Hound Spike IQ Project Notes
 
-*Updated 2-12-2026*
+*Updated 2-14-2026*
 
 ## Code status
 
@@ -232,7 +232,7 @@ Current Launch JSON for debugging
 # This file is part of sigmf-python. https://github.com/sigmf/sigmf-python
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
-# last updated 1-27-26
+# last updated 2-14-26
 
 """converter for signalhound files to SigMF format."""
 
@@ -257,13 +257,21 @@ from .. import fromfile
 from ..sigmffile import get_sigmf_filenames
 from ..utils import SIGMF_DATETIME_ISO8601_FMT
 
-log = logging.getLogger()
+import sys
 
 # Define constants for Spike
 ENDIANNESS = "<"
 DATATYPE = "ci16_le"  # complex short int16 little-endian
 # DATATYPE_SIZE = 4  # bytes per complex int16 sample (2 bytes I + 2 bytes Q)
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    stream=sys.stdout,   # ensure logs go to stdout (or use sys.stderr)
+)
+
+log = logging.getLogger()
 
 def _to_float(x)  -> Optional[float]:
     """Convert value to float, return None if invalid."""
@@ -279,7 +287,6 @@ def _to_int(x) -> Optional[int]:
         return int(float(x))
     except Exception:
         return None
-
 
 def _parse_preview_trace(text) -> list[float]:
     """Parse PreviewTrace string into list of floats."""
@@ -300,6 +307,22 @@ def _parse_preview_trace(text) -> list[float]:
             # skip malformed entries
             continue
     return vals
+
+
+# TODO: Use utils ISO converter instead 
+from datetime import datetime, timezone, timedelta
+
+def epoch_nanos_to_sigmf_datetime(epoch_nanos: int) -> str:
+    """
+    Convert epoch time in nanoseconds to a ISO‑8601 datetime string.
+
+    Returns a UTC string with millisecond precision and trailing 'Z', e.g.
+    "2026-02-14T20:31:10.877Z".
+    """
+    secs = epoch_nanos // 1_000_000_000
+    rem_ns = epoch_nanos % 1_000_000_000
+    dt = datetime.fromtimestamp(secs, tz=timezone.utc) + timedelta(microseconds=rem_ns / 1000)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
 
 def spike_to_sigmf_metadata(xml_file_path) -> dict:
@@ -354,8 +377,6 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     # Optional log.info of data for debug >> 
     # log.info(md)
 
-    # TODO: Consider additonal data type conversion and validation
-    
     # Typed fields / normalized
     md["DataType"] = md.pop("DataType_raw")
     md["DeviceType"] = md.pop("DeviceType_raw")
@@ -380,14 +401,16 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     # Create a reference to the spike XML data 
     spike_xml = md
 
+    # TODO: Confirm Zero Span Spike files are single channel
+    channel_number = 1
+
     # Check datatype mapping based on Spike XML DataType field - should be "Complex Short"
     spike_data_type = spike_xml.get("DataType")
-
     if spike_data_type == "Complex Short":
         data_type= "ci16_le"  # complex int16 little-endian
     else:
         raise SigMFConversionError(f"Unsupported Spike DataType: {spike_data_type}")
- 
+    # Check for DeviceType field for hardware description, otherwise use generic description
     device_type = spike_xml.get("DeviceType")
     hardware_description = (
         device_type if device_type is not None else "Signal Hound Device"
@@ -399,11 +422,16 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     # Build the .iq file path for data file
     data_file_path = base_file_name + ".iq"
 
-    # Calculate sample count using the original IQ data file size
     filesize = os.path.getsize(data_file_path)
-    # TODO: Fix this!
-    filesize= 21045
-    log.info("File size: %d", filesize)
+
+    # complex 16-bit integer  IQ data > ci16_le in SigMF
+    elem_size = np.dtype(np.int16).itemsize
+
+    # Each complex sample = 2 int16 (I,Q)
+    elem_count = filesize // elem_size
+    log.info(f"Element Count: {elem_count}")
+
+    elem_size = np.dtype(np.int16).itemsize
 
     # complex 16-bit integer  IQ data > ci16_le in SigMF
     elem_size = np.dtype(np.int16).itemsize
@@ -411,39 +439,29 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     # Each complex sample = 2 int16 (I,Q)
     frame_bytes = 2 * elem_size
     
-    # TODO: Fix this commented code or remove
-    # if filesize % frame_bytes != 0:
-    #     raise SigMFConversionError(f"File size {filesize} not divisible by {frame_bytes}; partial sample present")
-    
+    if filesize % frame_bytes != 0:
+        raise SigMFConversionError(f"File size {filesize} not divisible by {frame_bytes}; partial sample present")
+
+    # Calculate sample count using the original IQ data file size
+    # TODO: Determine proper calculation of sample count for LINUX and Windows file systems - perhaps use the SampleCount field in the XML file instead of calculating from file size?
+    # -1 for EOF byte that is not part of the data?
+
     # Each complex sample = 2 int16 (I,Q)
     sample_count = filesize // frame_bytes
-
     log.info(f"Sample count: {sample_count}")
-   
+
     # For now define static values. Perhaps take as JSON or command arg input in the future.
     spike_author = "Spike File Conversion - Unknown Author"
     spike_licence = "Spike File Conversion - Unknown License"
     spike_description = "Signal Hound Spike Zero Span File converted to SigMF format"
 
-    # TODO: Confirm Zero Span Spike files are single channel
-    channel_number = 1
-
-    # TODO: see if this can be simplified and add error checking
     # Convert the datetime object to an ISO 8601 formatted string
     epoch_time = spike_xml.get("EpochNanos")
     if epoch_time is None:
             raise SigMFConversionError("Missing EpochNanos in Spike XML");
-    
-    epoch_time = int(epoch_time)
-    secs = epoch_time // 1_000_000_000
-    rem_ns = epoch_time % 1_000_000_000
-    dt_object_utc = datetime.fromtimestamp(secs, tz=timezone.utc) + timedelta(
-        microseconds=rem_ns / 1000
-    )
-    # Format with milliseconds and Zulu suffix for SigMF    
-    iso_8601_string = dt_object_utc.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-    log.info(f"Epoch time: {epoch_time}")
-    log.info(f"ISO 8601 time: {iso_8601_string}")
+
+    epoch_nanos = int(epoch_time)
+    iso_8601_string = epoch_nanos_to_sigmf_datetime(epoch_nanos)
 
     # --- Base Global Metadata ---
     global_md = {
@@ -470,22 +488,6 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
             "core:sample_start": 0,
         }
     ]
-
-    # compute SHA‑512 hash of data file
-    def compute_sha512(path, bufsize=1024 * 1024) -> str:
-        """Compute SHA-512 hash of a file in chunks."""
-
-        h = hashlib.sha512()
-        with open(path, "rb") as f:
-            while chunk := f.read(bufsize):
-                h.update(chunk)
-        return h.hexdigest()
-
-    # Compute SHA-512 of the data file
-    # TODO: Determine if we need to hash the .iq or .sigmf-data file - check blue.py code
-    # TODO: Do we need to even recreate the .sigmf-data file
-    data_sha512 = compute_sha512(data_file_path)  # path to the .sigmf-data file
-    global_md["core:sha512"] = data_sha512
 
     # TODO: Confirm freq_upper_edge and  lower_frequency_edge calculations - is this correct for Spike files? ScaleFactor? Mhz? /2?
     center = float(spike_xml.get("CenterFrequency") or 0.0)
@@ -538,53 +540,29 @@ def convert_iq_data(xml_file_path, sigmfObj=None) -> np.ndarray:
      numpy.ndarray
          Parsed samples.
     """
-
+   
+    # TODO: Although this code may not be needed now, this function can be extended in the future to handle multiple channel recordings?
+    # (Samples pending for testing with multi-channel Spike files) 
+     
     log.info("===== Parsing spike file data values =====")
     base_file_name = os.path.splitext(xml_file_path)[0]
     iq_file_path = base_file_name + ".iq"
-    filesize = os.path.getsize(iq_file_path)
-    log.info(f"File size: {filesize}")
-  
 
     # Determine destination path for SigMF data file
     dest_path = xml_file_path.rsplit(".", 1)[0]
 
+    # Gather IQ file information from generated SigMF data file 
+    if isinstance(sigmfObj, dict):
+        sample_rate = (
+            sigmfObj.get("global", {}).get("core:sample_rate")
+            or sigmfObj.get("global", {}).get("sample_rate")
+            or sigmfObj.get("core:sample_rate")
+        )
+        elem_count=sigmfObj.get("annotations", [{}])[0].get("core:sample_count")
+    
     # complex 16-bit integer  IQ data > ci16_le in SigMF
     elem_size = np.dtype(np.int16).itemsize
-
-    # Each complex sample = 2 int16 (I,Q)
-    elem_count = filesize // elem_size
-    log.info(f"Element Count: {elem_count}")
-
-    elem_size = np.dtype(np.int16).itemsize
-
-    # Determine sample rate robustly from passed metadata (dict) or SigMFFile
-    sample_rate = None
-    if sigmfObj is not None:
-        # sigmfObj may be the dict produced by `spike_to_sigmf_metadata()` or a SigMFFile
-        if isinstance(sigmfObj, dict):
-            sample_rate = (
-                sigmfObj.get("global", {}).get("core:sample_rate")
-                or sigmfObj.get("global", {}).get("sample_rate")
-                or sigmfObj.get("core:sample_rate")
-            )
-        else:
-            # try attributes commonly present on SigMFFile
-            sample_rate = getattr(sigmfObj, "global_info", {}).get("core:sample_rate")
-            if sample_rate is None:
-                sample_rate = getattr(sigmfObj, "global_info", {}).get("sample_rate")
-
-    if sample_rate is not None:
-        try:
-            time_interval = 1.0 / float(sample_rate)
-            sample_rate = 1.0 / time_interval
-            log.info(f"Sample rate: %s MHz", sample_rate / 1e6)
-        except Exception:
-            log.warning("Could not parse sample rate from metadata: %r", sample_rate)
-            sample_rate = None
-    else:
-        log.debug("No sample rate available in metadata; skipping sample-rate logs")
-
+    
     # Read raw interleaved int16 IQ
     samples = np.fromfile(iq_file_path, dtype=np.int16, offset=0, count=elem_count)
 
@@ -599,7 +577,7 @@ def convert_iq_data(xml_file_path, sigmfObj=None) -> np.ndarray:
 
     log.info(f"==== Wrote SigMF data to {dest_path + '.sigmf-data'} ====")
 
-    # Reassemble interleaved IQ samples
+    # TODO: Confirm that there is no need to reassemble interleaved IQ samples
     # samples = raw_samples[::2] + 1j*raw_samples[1::2] # convert to IQIQIQ...
 
     # Return the IQ data if needed for further processing if needed
@@ -642,6 +620,7 @@ def signalhound_to_sigmf(
     if out_path is None:
         create_ncd = True
 
+    # TODO: Should time be based on file modification time or the EpochNanos field in the XML metadata? For now using file modification time since it is more likely to be present and accurate for the actual data capture time, whereas the EpochNanos field may be missing or inaccurate in some cases. This can be revisited in the future if needed based on user feedback or specific use cases.
     modify_time = signalhound_path.lstat().st_mtime
     signalhound_datetime = datetime.fromtimestamp(modify_time, tz=timezone.utc)
 
@@ -660,18 +639,35 @@ def signalhound_to_sigmf(
     except Exception as e:
         raise SigMFConversionError(f"Failed to convert or parse IQ data values: {e}")
 
-    # use the generated global metadata dict for SigMFFile construction
+    # Use the generated global metadata dict for SigMFFile construction
     global_info = sigmfMetaData.get("global", {})
-    # TODO: Determine if boundary calculations are needed for Spike files
-    header_bytes = 0  # No header bytes for IQ files
+    header_bytes = 0 # No header bytes for raw IQ files, but could be set to non-zero if needed for other file types or future use cases
     capture_info[SigMFFile.HEADER_BYTES_KEY] = header_bytes
-    
+    log.info(f"Header Bytes: {header_bytes}")
+    data_bytes = signalhound_path.stat().st_size
+    log.info(f"Data Bytes: {data_bytes}")
+
+    # create metadata SigMF File 
+    meta = SigMFFile(global_info=global_info)
+
+     # No data file offset for IQ files
+     # Manually set the fields that set_data_file() would normally populate
+    meta.data_file = signalhound_path
+    meta._data_file_offset = header_bytes
+    meta._data_file_skip_checksum = True
+    meta._data_file_size = data_bytes
+
+    # Explicitly disable memmap for SignalHound files since they may not be compatible with memmap
+    meta._data_file_is_memmap = False
+    meta._data_file_memmap_shape = None
+    meta._data_file_is_binary = True
+ 
+    # Create NCD if specified, otherwise create standard SigMF dataset or archive
     if create_ncd:
-        # create metadata-only SigMF for NCD pointing to original file
-        meta = SigMFFile(global_info=global_info)
-        # No data file offset for IQ files
-        meta.set_data_file(data_file=signalhound_path, offset=header_bytes)
+  
         meta.data_buffer = io.BytesIO()
+        meta.data_buffer.write(iq_data)
+        meta.data_buffer.seek(0)
         signalhound_data = meta.data_buffer
         meta.add_capture(0, metadata=capture_info)
 
@@ -691,6 +687,8 @@ def signalhound_to_sigmf(
     else:
         base_path = Path(out_path)
 
+    # TODO: Refactor to use get_sigmf_filenames() for consistent filename generation and handling of output paths, including when out_path is None (defaulting to same directory as input file with .sigmf extension). This will also ensure that the correct paths are used for both the metadata and data files, and that the archive file is correctly named if create_archive is True.
+
     filenames = get_sigmf_filenames(base_path)
 
     output_dir = filenames["meta_fn"].parent
@@ -698,20 +696,13 @@ def signalhound_to_sigmf(
 
     meta = SigMFFile(global_info=global_info)
 
-    # No data file offset for IQ files
-    # TODO: Confirm if this is correct for Spike files - perhaps set to zero?
-    capture_info[SigMFFile.HEADER_BYTES_KEY] = header_bytes
-    log.info(f"Header Bytes: {header_bytes}")
-    data_bytes = signalhound_path.stat().st_size
-    data_bytes = 100000
-    log.info(f"Data Bytes: {data_bytes}")
-
-    meta.set_data_file(data_file=signalhound_path, offset=header_bytes, skip_checksum=True, size_bytes=data_bytes)
- 
     meta.data_buffer = io.BytesIO()
+    meta.data_buffer.write(iq_data)
+    meta.data_buffer.seek(0)
     signalhound_data = meta.data_buffer
 
 
+    # Create Archive if specified, otherwise write separate meta and data files
     if create_archive:
         # use temporary directory for data file when creating archive
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -726,19 +717,19 @@ def signalhound_to_sigmf(
             # metadata returned should be for this archive
             meta = fromfile(filenames["archive_fn"])
     else:
-        # write separate meta and data files
+        # Write separate meta and data files
         data_path = filenames["data_fn"]
         meta.tofile(data_path)
         log.info("wrote SigMF dataset to %s", data_path)
 
-        meta = SigMFFile(data_file=signalhound_path, global_info=global_info)
-        meta.add_capture(0, metadata=capture_info)
+        # TODO: Need to convert to calling SigMFFile with data_file argument instead of manually setting fields and using data_buffer for now, but this is needed to handle the IQ data conversion and writing for Spike files. Refactor to use set_data_file() once the IQ data handling can be integrated into that method.
+        # meta = SigMFFile(data_file=signalhound_path, global_info=global_info)
+        # meta.add_capture(0, metadata=capture_info)
 
-        meta.tofile(filenames["meta_fn"], toarchive=False)
-        log.info("wrote SigMF metadata to %s", filenames["meta_fn"])
+        # meta.tofile(filenames["meta_fn"], toarchive=False)
+        # log.info("wrote SigMF metadata to %s", filenames["meta_fn"])
 
-    log.debug("created %r", meta)
+    log.debug("Created %r", meta)
+
     return meta
-
-
 ```
