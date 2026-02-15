@@ -264,7 +264,6 @@ ENDIANNESS = "<"
 DATATYPE = "ci16_le"  # complex short int16 little-endian
 # DATATYPE_SIZE = 4  # bytes per complex int16 sample (2 bytes I + 2 bytes Q)
 
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -393,6 +392,7 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     md["IQFileName"] = md.pop("IQFileName_raw")
 
     # PreviewTrace: list of floats and numpy array
+    # TODO: Consider adding a flag to include preview trace or not.
     # TODO: Confirm np.int16 data type for preview data elements.
     preview_raw = text_of("PreviewTrace")
     md["PreviewTrace_list"] = _parse_preview_trace(preview_raw)
@@ -513,14 +513,6 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
         "annotations": annotations,
     }
 
-    # Write .sigmf-meta file
-    base_file_name = os.path.splitext(xml_file_path)[0]
-    meta_path = base_file_name + ".sigmf-meta"
-
-    with open(meta_path, "w") as f:
-        json.dump(sigmf, f, indent=2)
-        log.info(f"==== Wrote SigMF metadata to {meta_path} ====")
-
     return sigmf
 
 
@@ -551,6 +543,8 @@ def convert_iq_data(xml_file_path, sigmfObj=None) -> np.ndarray:
     # Determine destination path for SigMF data file
     dest_path = xml_file_path.rsplit(".", 1)[0]
 
+    # TODO: Confirm that the data that is used is correct for the Spike files
+
     # Gather IQ file information from generated SigMF data file 
     if isinstance(sigmfObj, dict):
         sample_rate = (
@@ -558,7 +552,7 @@ def convert_iq_data(xml_file_path, sigmfObj=None) -> np.ndarray:
             or sigmfObj.get("global", {}).get("sample_rate")
             or sigmfObj.get("core:sample_rate")
         )
-        elem_count=sigmfObj.get("annotations", [{}])[0].get("core:sample_count")
+        elem_count=(sigmfObj.get("annotations", [{}])[0].get("core:sample_count"))*2 # *2 for I and Q samples
     
     # complex 16-bit integer  IQ data > ci16_le in SigMF
     elem_size = np.dtype(np.int16).itemsize
@@ -572,15 +566,15 @@ def convert_iq_data(xml_file_path, sigmfObj=None) -> np.ndarray:
         log.warning("Trimming %d trailing byte(s) to align samples", trim)
         samples -= trim
 
+    # TODO: Confirm that there is no need to reassemble interleaved IQ samples
+    # samples = raw_samples[::2] + 1j*raw_samples[1::2] # convert to IQIQIQ...
+
     # Write directly to SigMF data file (no normalization)
     samples.tofile(dest_path + ".sigmf-data")
 
     log.info(f"==== Wrote SigMF data to {dest_path + '.sigmf-data'} ====")
 
-    # TODO: Confirm that there is no need to reassemble interleaved IQ samples
-    # samples = raw_samples[::2] + 1j*raw_samples[1::2] # convert to IQIQIQ...
-
-    # Return the IQ data if needed for further processing if needed
+    # Return the IQ data if needed for further processing if needed in the future. 
     return samples
 
 def signalhound_to_sigmf(
@@ -631,14 +625,6 @@ def signalhound_to_sigmf(
     # Call the SigMF conversion for metadata generation (returns dict)
     sigmfMetaData = spike_to_sigmf_metadata(signalhound_path)
 
-    # Convert IQ data for Zero span Spike file
-    base_file_name = os.path.splitext(signalhound_path)[0]
-    iq_file_path = base_file_name + ".iq"
-    try:
-        iq_data = convert_iq_data(iq_file_path, sigmfMetaData)
-    except Exception as e:
-        raise SigMFConversionError(f"Failed to convert or parse IQ data values: {e}")
-
     # Use the generated global metadata dict for SigMFFile construction
     global_info = sigmfMetaData.get("global", {})
     header_bytes = 0 # No header bytes for raw IQ files, but could be set to non-zero if needed for other file types or future use cases
@@ -647,59 +633,45 @@ def signalhound_to_sigmf(
     data_bytes = signalhound_path.stat().st_size
     log.info(f"Data Bytes: {data_bytes}")
 
-    # create metadata SigMF File 
+    # create SigMF metadata 
     meta = SigMFFile(global_info=global_info)
-
-     # No data file offset for IQ files
-     # Manually set the fields that set_data_file() would normally populate
     meta.data_file = signalhound_path
-    meta._data_file_offset = header_bytes
-    meta._data_file_skip_checksum = True
-    meta._data_file_size = data_bytes
 
+    # Manually set the fields that set_data_file() would normally populate
+    meta._data_file_offset = header_bytes
+    meta._data_file_size = data_bytes
+    meta._data_file_skip_checksum = True
+ 
+    # TODO: Determine how to use memmap to avoid issues in SigMFFile.
     # Explicitly disable memmap for SignalHound files since they may not be compatible with memmap
     meta._data_file_is_memmap = False
     meta._data_file_memmap_shape = None
     meta._data_file_is_binary = True
- 
+
+  
     # Create NCD if specified, otherwise create standard SigMF dataset or archive
     if create_ncd:
-  
-        meta.data_buffer = io.BytesIO()
-        meta.data_buffer.write(iq_data)
-        meta.data_buffer.seek(0)
-        signalhound_data = meta.data_buffer
-        meta.add_capture(0, metadata=capture_info)
+       # Write .sigmf-meta file
+       base_file_name = os.path.splitext(signalhound_path)[0]
+       meta_path = base_file_name + ".sigmf-meta"
+
+       with open(meta_path, "w") as f:
+            json.dump(sigmfMetaData, f, indent=2)
+            log.info(f"==== Wrote SigMF metadata to {meta_path} ====")
 
         # write metadata file if output path specified
-        if out_path is not None:
+       if out_path is not None:
             filenames = get_sigmf_filenames(out_path)
             output_dir = filenames["meta_fn"].parent
             output_dir.mkdir(parents=True, exist_ok=True)
             meta.tofile(filenames["meta_fn"], toarchive=False)
             log.info("wrote SigMF non-conforming metadata to %s", filenames["meta_fn"])
-
-        log.debug("created %r", meta)
-        return meta
+            log.debug("created %r", meta)
 
     if out_path is None:
         base_path = signalhound_path.with_suffix(".sigmf")
     else:
         base_path = Path(out_path)
-
-    # TODO: Refactor to use get_sigmf_filenames() for consistent filename generation and handling of output paths, including when out_path is None (defaulting to same directory as input file with .sigmf extension). This will also ensure that the correct paths are used for both the metadata and data files, and that the archive file is correctly named if create_archive is True.
-
-    filenames = get_sigmf_filenames(base_path)
-
-    output_dir = filenames["meta_fn"].parent
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    meta = SigMFFile(global_info=global_info)
-
-    meta.data_buffer = io.BytesIO()
-    meta.data_buffer.write(iq_data)
-    meta.data_buffer.seek(0)
-    signalhound_data = meta.data_buffer
 
 
     # Create Archive if specified, otherwise write separate meta and data files
@@ -716,20 +688,43 @@ def signalhound_to_sigmf(
             log.info("wrote SigMF archive to %s", filenames["archive_fn"])
             # metadata returned should be for this archive
             meta = fromfile(filenames["archive_fn"])
+
     else:
         # Write separate meta and data files
+        filenames = get_sigmf_filenames(out_path)
         data_path = filenames["data_fn"]
-        meta.tofile(data_path)
+        base_file_name = os.path.splitext(signalhound_path)[0]
+        iq_file_path = base_file_name + ".iq"
+   
+        # Convert IQ data for Zero span Spike file
+        try:
+            iq_data = convert_iq_data(iq_file_path, sigmfMetaData)
+        except Exception as e:
+            raise SigMFConversionError(f"Failed to convert or parse IQ data values: {e}")
+
+        # Write .sigmf-meta file
+        meta_path = base_file_name + ".sigmf-meta"
+        with open(meta_path, "w") as f:
+            json.dump(sigmfMetaData, f, indent=2)
+            log.info(f"==== Wrote SigMF metadata to {meta_path} ====")
+
         log.info("wrote SigMF dataset to %s", data_path)
 
         # TODO: Need to convert to calling SigMFFile with data_file argument instead of manually setting fields and using data_buffer for now, but this is needed to handle the IQ data conversion and writing for Spike files. Refactor to use set_data_file() once the IQ data handling can be integrated into that method.
+        # TODO: Refactor to use get_sigmf_filenames() for consistent filename generation and handling of output paths, including when out_path is None (defaulting to same directory as input file with .sigmf extension). This will also ensure that the correct paths are used for both the metadata and data files, and that the archive file is correctly named if create_archive is True.
         # meta = SigMFFile(data_file=signalhound_path, global_info=global_info)
         # meta.add_capture(0, metadata=capture_info)
-
         # meta.tofile(filenames["meta_fn"], toarchive=False)
         # log.info("wrote SigMF metadata to %s", filenames["meta_fn"])
+        # output_dir = filenames["meta_fn"].parent
+        # output_dir.mkdir(parents=True, exist_ok=True)
+        # meta = SigMFFile(global_info=global_info)
+        # meta.data_buffer = io.BytesIO()
+        # meta.data_buffer.write(iq_data)
+        # meta.data_buffer.seek(0)
+        # signalhound_data = meta.data_buffer
 
     log.debug("Created %r", meta)
-
     return meta
+
 ```
