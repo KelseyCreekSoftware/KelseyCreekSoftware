@@ -232,7 +232,7 @@ Current Launch JSON for debugging
 # This file is part of sigmf-python. https://github.com/sigmf/sigmf-python
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
-# last updated 2-15-26
+# last updated 2-16-26
 
 """converter for signalhound files to SigMF format."""
 
@@ -433,6 +433,12 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     dt = datetime.fromtimestamp(secs, tz=timezone.utc) + timedelta(microseconds=rem_ns / 1000)
     iso_8601_string = dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
+    # TODO: Confirm freq_upper_edge and  lower_frequency_edge calculations - is this correct for Spike files? ScaleFactor? Mhz? /2?
+    center = float(spike_xml.get("CenterFrequency") or 0.0)
+    bandwidth = float(spike_xml.get("IFBandwidth") or 0.0)
+    upper_frequency_edge = center + (bandwidth / 2.0)
+    lower_frequency_edge = center - (bandwidth / 2.0)
+
     # --- Base Global Metadata ---
     global_md = {
         "core:author": spike_author,
@@ -458,12 +464,6 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
             "core:sample_start": 0,
         }
     ]
-
-    # TODO: Confirm freq_upper_edge and  lower_frequency_edge calculations - is this correct for Spike files? ScaleFactor? Mhz? /2?
-    center = float(spike_xml.get("CenterFrequency") or 0.0)
-    bandwidth = float(spike_xml.get("IFBandwidth") or 0.0)
-    upper_frequency_edge = center + (bandwidth / 2.0)
-    lower_frequency_edge = center - (bandwidth / 2.0)
 
     # --- Create annotations array using calculated values---
     annotations = [
@@ -600,6 +600,10 @@ def signalhound_to_sigmf(
 
     # Use the generated global metadata dict for SigMFFile construction
     global_info = sigmfMetaData.get("global", {})
+
+    # create SigMF metadata 
+    meta = SigMFFile(global_info=global_info)
+    meta.data_file = signalhound_path
     
     # TODO: Fix the incorrect structure of annotations using SigMF best practices
     # Currently using the calculated values for upper and lower frequency edges
@@ -609,13 +613,17 @@ def signalhound_to_sigmf(
     header_bytes = 0 # No header bytes for raw IQ files, but could be set to non-zero if needed for other file types or future use cases
     capture_info[SigMFFile.HEADER_BYTES_KEY] = header_bytes
 
-    # Set the annotations information. 
-    capture_info[SigMFFile.ANNOTATION_KEY] = sigmfMetaData.get("annotations", [])
-
-    # create SigMF metadata 
-    meta = SigMFFile(global_info=global_info)
-    meta.data_file = signalhound_path
-
+    # Set the annotations information
+    # Add annotations from metadata
+    for annotation in sigmfMetaData.get("annotations", []):
+        start_idx = annotation.get(SigMFFile.START_INDEX_KEY, 0)
+        length = annotation.get(SigMFFile.LENGTH_INDEX_KEY)
+        # Pass remaining fields as metadata (excluding standard annotation keys)
+        annot_metadata = {k: v for k, v in annotation.items() 
+                         if k not in [SigMFFile.START_INDEX_KEY, SigMFFile.LENGTH_INDEX_KEY]}
+        meta.add_annotation(start_idx, length=length, metadata=annot_metadata)
+    
+  
     # Manually set the fields that set_data_file() would normally populate
     meta._data_file_offset = header_bytes
     meta._data_file_size = data_bytes
@@ -672,6 +680,14 @@ def signalhound_to_sigmf(
 
             meta = SigMFFile(data_file=data_path, global_info=global_info)
             meta.add_capture(0, metadata=capture_info)
+            
+            # Add annotations from metadata
+            for annotation in sigmfMetaData.get("annotations", []):
+                start_idx = annotation.get(SigMFFile.START_INDEX_KEY, 0)
+                length = annotation.get(SigMFFile.LENGTH_INDEX_KEY)
+                annot_metadata = {k: v for k, v in annotation.items() 
+                                 if k not in [SigMFFile.START_INDEX_KEY, SigMFFile.LENGTH_INDEX_KEY]}
+                meta.add_annotation(start_idx, length=length, metadata=annot_metadata)
 
             meta.tofile(filenames["archive_fn"], toarchive=True)
             log.info("wrote SigMF archive to %s", filenames["archive_fn"])
@@ -691,8 +707,16 @@ def signalhound_to_sigmf(
         
         meta = SigMFFile(global_info=global_info)
         meta.set_data_file(data_buffer=data_buffer, skip_checksum=True)
-        
         meta.add_capture(0, metadata=capture_info)
+
+        # Add annotations from metadata
+        for annotation in sigmfMetaData.get("annotations", []):
+            start_idx = annotation.get(SigMFFile.START_INDEX_KEY, 0)
+            length = annotation.get(SigMFFile.LENGTH_INDEX_KEY)
+            # Pass remaining fields as metadata (excluding standard annotation keys)
+            annot_metadata = {k: v for k, v in annotation.items() 
+                            if k not in [SigMFFile.START_INDEX_KEY, SigMFFile.LENGTH_INDEX_KEY]}
+            meta.add_annotation(start_idx, length=length, metadata=annot_metadata)
 
         # TODO: Check which files are being written data vs. just meta data
         # Previous Code... 
@@ -711,5 +735,4 @@ def signalhound_to_sigmf(
 
     log.debug("Created %r", meta)
     return meta
-
 ```
