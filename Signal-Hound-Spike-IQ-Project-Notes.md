@@ -1,13 +1,13 @@
 # Signal Hound Spike IQ Project Notes
 
-*Updated 2-15-2026*
+*Updated 2-16-2026*
 
 ## Code status
 
-- Have moved stand alone code into local copy of sigmf code tree to integrate into convert command line __main__.py.
-- Have reviewed all 1408 lines of sigmffile.py to better understand intergration when coding a converter.
-- Converter docs are at: https://sigmf.readthedocs.io/en/latest/converters.html
-- Need to locate multi channel IQ file to see how it is structured and determine how to convert to SigMF archive format.
+- Able to convert one sample based on current understanding of Signal Hound Spike data files. 
+- Using local copy of sigmf code tree to integrate into convert command line __main__.py.
+ (Converter docs are at: https://sigmf.readthedocs.io/en/latest/converters.html)
+- Need to locate Spike SignalHound multi channel IQ file to see how it is structured and determine how to convert to SigMF archive format.
 
 ## Resources
 
