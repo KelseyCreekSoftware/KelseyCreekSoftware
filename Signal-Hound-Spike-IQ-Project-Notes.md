@@ -232,7 +232,7 @@ Current Launch JSON for debugging
 # This file is part of sigmf-python. https://github.com/sigmf/sigmf-python
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
-# last updated 2-14-26
+# last updated 2-15-26
 
 """converter for signalhound files to SigMF format."""
 
@@ -622,16 +622,25 @@ def signalhound_to_sigmf(
         SigMFFile.DATETIME_KEY: signalhound_datetime.strftime(SIGMF_DATETIME_ISO8601_FMT),
     }
 
+    data_bytes = signalhound_path.stat().st_size
+    log.info(f"Data Bytes: {data_bytes}")
+
     # Call the SigMF conversion for metadata generation (returns dict)
     sigmfMetaData = spike_to_sigmf_metadata(signalhound_path)
 
     # Use the generated global metadata dict for SigMFFile construction
     global_info = sigmfMetaData.get("global", {})
+    
+    # TODO: Fix the incorrect structure of annotations using SigMF best practices
+    # Currently using the calculated values for upper and lower frequency edges
+ 
+    # Set captures information
+    capture_info[SigMFFile.FREQUENCY_KEY] = sigmfMetaData.get("captures", [{}])[0].get("core:frequency")
     header_bytes = 0 # No header bytes for raw IQ files, but could be set to non-zero if needed for other file types or future use cases
     capture_info[SigMFFile.HEADER_BYTES_KEY] = header_bytes
-    log.info(f"Header Bytes: {header_bytes}")
-    data_bytes = signalhound_path.stat().st_size
-    log.info(f"Data Bytes: {data_bytes}")
+
+    # Set the annotations information. 
+    capture_info[SigMFFile.ANNOTATION_KEY] = sigmfMetaData.get("annotations", [])
 
     # create SigMF metadata 
     meta = SigMFFile(global_info=global_info)
@@ -648,7 +657,9 @@ def signalhound_to_sigmf(
     meta._data_file_memmap_shape = None
     meta._data_file_is_binary = True
 
-  
+    # Get filenames for metadata, data, and archive based on output path and input file name
+    filenames = get_sigmf_filenames(out_path)
+
     # Create NCD if specified, otherwise create standard SigMF dataset or archive
     if create_ncd:
        # Write .sigmf-meta file
@@ -657,15 +668,15 @@ def signalhound_to_sigmf(
 
        with open(meta_path, "w") as f:
             json.dump(sigmfMetaData, f, indent=2)
-            log.info(f"==== Wrote SigMF metadata to {meta_path} ====")
+            log.info(f"==== TEMP: Wrote SigMF metadata to {meta_path} ====")
 
-        # write metadata file if output path specified
+       # TODO: Use this code for metadata and remove code above
+       # write metadata file if output path specified
        if out_path is not None:
-            filenames = get_sigmf_filenames(out_path)
             output_dir = filenames["meta_fn"].parent
             output_dir.mkdir(parents=True, exist_ok=True)
             meta.tofile(filenames["meta_fn"], toarchive=False)
-            log.info("wrote SigMF non-conforming metadata to %s", filenames["meta_fn"])
+            log.info("For NCD: wrote SigMF non-conforming metadata to %s", filenames["meta_fn"])
             log.debug("created %r", meta)
 
     if out_path is None:
@@ -673,13 +684,21 @@ def signalhound_to_sigmf(
     else:
         base_path = Path(out_path)
 
-
     # Create Archive if specified, otherwise write separate meta and data files
     if create_archive:
         # use temporary directory for data file when creating archive
         with tempfile.TemporaryDirectory() as temp_dir:
             data_path = Path(temp_dir) / filenames["data_fn"].name
-            meta.tofile(data_path)
+            
+            # Convert IQ data and write to temp directory
+            try:
+                iq_data = convert_iq_data(str(signalhound_path), sigmfMetaData)
+            except Exception as e:
+                raise SigMFConversionError(f"Failed to convert or parse IQ data values: {e}")
+            
+            # Write converted IQ data to temporary file
+            iq_data.tofile(data_path)
+            log.info(f"Wrote converted IQ data to {data_path}")
 
             meta = SigMFFile(data_file=data_path, global_info=global_info)
             meta.add_capture(0, metadata=capture_info)
@@ -691,38 +710,34 @@ def signalhound_to_sigmf(
 
     else:
         # Write separate meta and data files
-        filenames = get_sigmf_filenames(out_path)
-        data_path = filenames["data_fn"]
-        base_file_name = os.path.splitext(signalhound_path)[0]
-        iq_file_path = base_file_name + ".iq"
-   
         # Convert IQ data for Zero span Spike file
         try:
-            iq_data = convert_iq_data(iq_file_path, sigmfMetaData)
+            iq_data = convert_iq_data(str(signalhound_path), sigmfMetaData)
         except Exception as e:
             raise SigMFConversionError(f"Failed to convert or parse IQ data values: {e}")
 
+        # Create SigMFFile with converted IQ data in a BytesIO buffer
+        data_buffer = io.BytesIO(iq_data.tobytes())
+        
+        meta = SigMFFile(global_info=global_info)
+        meta.set_data_file(data_buffer=data_buffer, skip_checksum=True)
+        
+        meta.add_capture(0, metadata=capture_info)
+
+        # TODO: Check which files are being written data vs. just meta data
+        # Previous Code... 
         # Write .sigmf-meta file
-        meta_path = base_file_name + ".sigmf-meta"
-        with open(meta_path, "w") as f:
-            json.dump(sigmfMetaData, f, indent=2)
-            log.info(f"==== Wrote SigMF metadata to {meta_path} ====")
+        # meta_path = base_file_name + ".sigmf-meta"
+        # with open(meta_path, "w") as f:
+        #     json.dump(sigmfMetaData, f, indent=2)
+        #     log.info(f"==== Wrote SigMF metadata to {meta_path} ====")
+        # log.info("wrote SigMF dataset to %s", data_path)
 
-        log.info("wrote SigMF dataset to %s", data_path)
-
-        # TODO: Need to convert to calling SigMFFile with data_file argument instead of manually setting fields and using data_buffer for now, but this is needed to handle the IQ data conversion and writing for Spike files. Refactor to use set_data_file() once the IQ data handling can be integrated into that method.
-        # TODO: Refactor to use get_sigmf_filenames() for consistent filename generation and handling of output paths, including when out_path is None (defaulting to same directory as input file with .sigmf extension). This will also ensure that the correct paths are used for both the metadata and data files, and that the archive file is correctly named if create_archive is True.
-        # meta = SigMFFile(data_file=signalhound_path, global_info=global_info)
-        # meta.add_capture(0, metadata=capture_info)
-        # meta.tofile(filenames["meta_fn"], toarchive=False)
-        # log.info("wrote SigMF metadata to %s", filenames["meta_fn"])
-        # output_dir = filenames["meta_fn"].parent
-        # output_dir.mkdir(parents=True, exist_ok=True)
-        # meta = SigMFFile(global_info=global_info)
-        # meta.data_buffer = io.BytesIO()
-        # meta.data_buffer.write(iq_data)
-        # meta.data_buffer.seek(0)
-        # signalhound_data = meta.data_buffer
+        # Write metadata and data files
+        output_dir = filenames["meta_fn"].parent
+        output_dir.mkdir(parents=True, exist_ok=True)
+        meta.tofile(filenames["meta_fn"], toarchive=False)
+        log.info("wrote SigMF metadata and data files to %s", filenames["meta_fn"])
 
     log.debug("Created %r", meta)
     return meta
