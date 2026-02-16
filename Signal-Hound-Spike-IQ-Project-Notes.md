@@ -418,35 +418,18 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
 
     # Strip the extension from the original file path
     base_file_name = os.path.splitext(xml_file_path)[0]
-
     # Build the .iq file path for data file
     data_file_path = base_file_name + ".iq"
 
-    filesize = os.path.getsize(data_file_path)
-
     # complex 16-bit integer  IQ data > ci16_le in SigMF
     elem_size = np.dtype(np.int16).itemsize
-
-    # Each complex sample = 2 int16 (I,Q)
     elem_count = filesize // elem_size
     log.info(f"Element Count: {elem_count}")
-
-    elem_size = np.dtype(np.int16).itemsize
-
-    # complex 16-bit integer  IQ data > ci16_le in SigMF
-    elem_size = np.dtype(np.int16).itemsize
-
-    # Each complex sample = 2 int16 (I,Q)
     frame_bytes = 2 * elem_size
-    
+    filesize = os.path.getsize(data_file_path)
     if filesize % frame_bytes != 0:
         raise SigMFConversionError(f"File size {filesize} not divisible by {frame_bytes}; partial sample present")
-
     # Calculate sample count using the original IQ data file size
-    # TODO: Determine proper calculation of sample count for LINUX and Windows file systems - perhaps use the SampleCount field in the XML file instead of calculating from file size?
-    # -1 for EOF byte that is not part of the data?
-
-    # Each complex sample = 2 int16 (I,Q)
     sample_count = filesize // frame_bytes
     log.info(f"Sample count: {sample_count}")
 
