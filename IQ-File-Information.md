@@ -1,6 +1,6 @@
 # RF Baseband IQ File Format Information
 
-*Updated 1-27-2026*
+*Updated 2-16-2026*
 
 This document summarizes key formats, standards, and tools related to IQ file handling and metadata. These formats can be evaluated and stack ranked for possible import into SigMF.
 
@@ -41,6 +41,12 @@ https://github.com/jacobagilbert/gr-sigmf_utils/blob/main/README.md
 An older OOT module for sigmf. This module contains blocks to read from and write to SigMF (the Signal Metadata Format) recordings in GNU Radio.
 
 https://github.com/skysafe/gr-sigmf
+
+### Julia
+
+This is a Julia package for working with metadata and storage associated with signals.
+
+https://github.com/JuliaIO/SigMF.jl/blob/main/src/datatype.jl
 
 ### RFML SigMF data manipulation
 
