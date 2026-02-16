@@ -1,6 +1,6 @@
 # Signal Hound Spike IQ Project Notes
 
-*Updated 2-14-2026*
+*Updated 2-15-2026*
 
 ## Code status
 
@@ -308,22 +308,6 @@ def _parse_preview_trace(text) -> list[float]:
     return vals
 
 
-# TODO: Use utils ISO converter instead 
-from datetime import datetime, timezone, timedelta
-
-def epoch_nanos_to_sigmf_datetime(epoch_nanos: int) -> str:
-    """
-    Convert epoch time in nanoseconds to a ISO‑8601 datetime string.
-
-    Returns a UTC string with millisecond precision and trailing 'Z', e.g.
-    "2026-02-14T20:31:10.877Z".
-    """
-    secs = epoch_nanos // 1_000_000_000
-    rem_ns = epoch_nanos % 1_000_000_000
-    dt = datetime.fromtimestamp(secs, tz=timezone.utc) + timedelta(microseconds=rem_ns / 1000)
-    return dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-
-
 def spike_to_sigmf_metadata(xml_file_path) -> dict:
     """
     Build a SigMF metadata file the spike xml file.
@@ -349,6 +333,7 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     root = tree.getroot()
 
     def text_of(tag) -> Optional[str]:
+        """Extract and strip text from XML element."""
         el = root.find(tag)
         return el.text.strip() if (el is not None and el.text is not None) else None
 
@@ -420,19 +405,19 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     base_file_name = os.path.splitext(xml_file_path)[0]
     # Build the .iq file path for data file
     data_file_path = base_file_name + ".iq"
-
+    filesize = os.path.getsize(data_file_path)
     # complex 16-bit integer  IQ data > ci16_le in SigMF
     elem_size = np.dtype(np.int16).itemsize
     elem_count = filesize // elem_size
     log.info(f"Element Count: {elem_count}")
     frame_bytes = 2 * elem_size
-    filesize = os.path.getsize(data_file_path)
     if filesize % frame_bytes != 0:
         raise SigMFConversionError(f"File size {filesize} not divisible by {frame_bytes}; partial sample present")
+
     # Calculate sample count using the original IQ data file size
     sample_count = filesize // frame_bytes
     log.info(f"Sample count: {sample_count}")
-
+    
     # For now define static values. Perhaps take as JSON or command arg input in the future.
     spike_author = "Spike File Conversion - Unknown Author"
     spike_licence = "Spike File Conversion - Unknown License"
@@ -441,10 +426,12 @@ def spike_to_sigmf_metadata(xml_file_path) -> dict:
     # Convert the datetime object to an ISO 8601 formatted string
     epoch_time = spike_xml.get("EpochNanos")
     if epoch_time is None:
-            raise SigMFConversionError("Missing EpochNanos in Spike XML");
-
+        raise SigMFConversionError("Missing EpochNanos in Spike XML")
     epoch_nanos = int(epoch_time)
-    iso_8601_string = epoch_nanos_to_sigmf_datetime(epoch_nanos)
+    secs = epoch_nanos // 1_000_000_000
+    rem_ns = epoch_nanos % 1_000_000_000
+    dt = datetime.fromtimestamp(secs, tz=timezone.utc) + timedelta(microseconds=rem_ns / 1000)
+    iso_8601_string = dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
 
     # --- Base Global Metadata ---
     global_md = {
