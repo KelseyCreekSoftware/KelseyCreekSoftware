@@ -42,6 +42,12 @@ An older OOT module for sigmf. This module contains blocks to read from and writ
 
 https://github.com/skysafe/gr-sigmf
 
+### SigMF-NS-NTIA
+
+This Signal Metadata Format SigMF namespace extension describes the National Telecommunications and Information Administration (NTIA)'s open data format for recorded signal datasets.
+
+https://github.com/NTIA/sigmf-ns-ntia
+
 ### Julia
 
 This is a Julia package for working with metadata and storage associated with signals.
