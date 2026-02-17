@@ -1,6 +1,6 @@
 # Signal Hound Spike IQ Project Notes
 
-*Updated 2-16-2026*
+*Updated 2-17-2026*
 
 ## Code status
 
@@ -64,7 +64,7 @@ between -1.0 and 1.0. To recover the original values, perform the following step
 
 ### Updates to convert  `__main__.py`
 
-One idea for convert integration is to add a --signalhound option as shown below.
+Right now just parsing thge start of XML file as magic byte deteaction.
 
 A better aproach may be update MagicBytes to parse the Signal Hound XML for the string `<SignalHoundIQFile Version="1.0">`. 
 
@@ -134,8 +134,7 @@ def main() -> None:
         "--ncd", action="store_true", help="Output .sigmf-meta only and process as a Non-Conforming Dataset (NCD)"
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s v{toolversion}")
-    ## TODO: Determine proper way to integrate Signal Hound files
-    parser.add_argument("--signalhound", action="store_true", help="Convert a Signal Hound file pair to SigMF - provide XML file as input")
+
     args = parser.parse_args()
 
     level_lut = {
@@ -159,17 +158,6 @@ def main() -> None:
     if output_path.is_dir():
         raise SigMFConversionError(f"Output path must be a filename, not a directory: {output_path}")
 
-    ## TODO: Determine proper way to integrate Signal Hound files
-    # First approach to integrate Signal Hound files
-    if args.signalhound:
-        _ = signalhound_to_sigmf(
-            signalhound_path=input_path,
-            out_path=output_path,
-            create_archive=args.archive,
-            create_ncd=args.ncd,
-        )
-        return
-
     # detect file type using magic bytes (same logic as fromfile())
     magic_bytes = get_magic_bytes(input_path, count=4, offset=0)
 
@@ -181,10 +169,15 @@ def main() -> None:
         # BLUE file
         _ = blue_to_sigmf(blue_path=input_path, out_path=output_path, create_archive=args.archive, create_ncd=args.ncd)
 
+    ## TODO: Determine proper way to integrate Signal Hound files. Perhaps include additional bytes for magic byte detection for XML?
+    elif magic_bytes == b"<?xm": # <?xml version="1.0" encoding="UTF-8"?> <SignalHoundIQFile Version="1.0">
+        # Signal Hound Spike 1.0 file
+        _ = signalhound_to_sigmf(signalhound_path=input_path, out_path=output_path, create_archive=args.archive, create_ncd=args.ncd)
+
     else:
         raise SigMFConversionError(
             f"Unsupported file format. Magic bytes: {magic_bytes}. "
-            f"Supported formats for conversion are WAV and BLUE/Platinum."
+            f"Supported formats for conversion are WAV, BLUE/Platinum and Signal Hound Spike."
         )
 
 
