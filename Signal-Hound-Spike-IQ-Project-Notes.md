@@ -204,8 +204,7 @@ Current Launch JSON for debugging
             "module": "sigmf.convert",
             "args": [
                 "C:\\Data1\\Ham_Radio\\SDR\\signalhound_to_sigmf_converter\\IQREC-11-13-25-17h31m10s877.xml",
-                "C:\\Data1\\Ham_Radio\\SDR\\signalhound_to_sigmf_converter\\convertedsignahoundfile",
-                "--signalhound"
+                "C:\\Data1\\Ham_Radio\\SDR\\signalhound_to_sigmf_converter\\convertedsignahoundfile"
             ],
             "console": "integratedTerminal",
             "justMyCode": false
@@ -503,9 +502,6 @@ def convert_iq_data(xml_file_path, sigmfObj=None) -> np.ndarray:
     base_file_name = os.path.splitext(xml_file_path)[0]
     iq_file_path = base_file_name + ".iq"
 
-    # Determine destination path for SigMF data file
-    dest_path = xml_file_path.rsplit(".", 1)[0]
-
     # TODO: Confirm that the data that is used is correct for the Spike files
 
     # Gather IQ file information from generated SigMF data file 
@@ -532,10 +528,10 @@ def convert_iq_data(xml_file_path, sigmfObj=None) -> np.ndarray:
     # TODO: Confirm that there is no need to reassemble interleaved IQ samples
     # samples = raw_samples[::2] + 1j*raw_samples[1::2] # convert to IQIQIQ...
 
-    # Write directly to SigMF data file (no normalization)
-    samples.tofile(dest_path + ".sigmf-data")
-
-    log.info(f"==== Wrote SigMF data to {dest_path + '.sigmf-data'} ====")
+    # TODO: Use consitent file names in output
+    # output_dir = filenames["meta_fn"].parent
+    samples.tofile(iq_file_path + ".sigmf-data")
+    log.info(f"==== Wrote SigMF data to {iq_file_path + '.sigmf-data'} ====")
 
     # Return the IQ data if needed for further processing if needed in the future. 
     return samples
@@ -572,12 +568,15 @@ def signalhound_to_sigmf(
     """
     signalhound_path = Path(signalhound_path)
     out_path = None if out_path is None else Path(out_path)
+    base_file_name = os.path.splitext(signalhound_path)[0]
+    meta_path = base_file_name + ".sigmf-meta"
 
     # auto-enable NCD when no output path is specified
     if out_path is None:
         create_ncd = True
 
-    # TODO: Should time be based on file modification time or the EpochNanos field in the XML metadata? For now using file modification time since it is more likely to be present and accurate for the actual data capture time, whereas the EpochNanos field may be missing or inaccurate in some cases. This can be revisited in the future if needed based on user feedback or specific use cases.
+    # TODO: Should time be based on file modification time or the EpochNanos field in the XML metadata? 
+    # For now using file modification time
     modify_time = signalhound_path.lstat().st_mtime
     signalhound_datetime = datetime.fromtimestamp(modify_time, tz=timezone.utc)
 
@@ -597,9 +596,6 @@ def signalhound_to_sigmf(
     # create SigMF metadata 
     meta = SigMFFile(global_info=global_info)
     meta.data_file = signalhound_path
-    
-    # TODO: Fix the incorrect structure of annotations using SigMF best practices
-    # Currently using the calculated values for upper and lower frequency edges
  
     # Set captures information
     capture_info[SigMFFile.FREQUENCY_KEY] = sigmfMetaData.get("captures", [{}])[0].get("core:frequency")
@@ -615,18 +611,12 @@ def signalhound_to_sigmf(
         annot_metadata = {k: v for k, v in annotation.items() 
                          if k not in [SigMFFile.START_INDEX_KEY, SigMFFile.LENGTH_INDEX_KEY]}
         meta.add_annotation(start_idx, length=length, metadata=annot_metadata)
-    
-  
+      
     # Manually set the fields that set_data_file() would normally populate
+    # TODO: Consider refactoring to use set_data_file() for better consistency
     meta._data_file_offset = header_bytes
     meta._data_file_size = data_bytes
     meta._data_file_skip_checksum = True
- 
-    # TODO: Determine how to use memmap to avoid issues in SigMFFile.
-    # Explicitly disable memmap for SignalHound files since they may not be compatible with memmap
-    meta._data_file_is_memmap = False
-    meta._data_file_memmap_shape = None
-    meta._data_file_is_binary = True
 
     # Get filenames for metadata, data, and archive based on output path and input file name
     filenames = get_sigmf_filenames(out_path)
@@ -634,8 +624,6 @@ def signalhound_to_sigmf(
     # Create NCD if specified, otherwise create standard SigMF dataset or archive
     if create_ncd:
        # Write .sigmf-meta file
-       base_file_name = os.path.splitext(signalhound_path)[0]
-       meta_path = base_file_name + ".sigmf-meta"
 
        with open(meta_path, "w") as f:
             json.dump(sigmfMetaData, f, indent=2)
@@ -728,4 +716,5 @@ def signalhound_to_sigmf(
 
     log.debug("Created %r", meta)
     return meta
+
 ```
