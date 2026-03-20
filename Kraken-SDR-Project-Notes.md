@@ -46,6 +46,11 @@ https://github.com/krakenrf/krakensdr_docs/wiki/08.-GNU-Radio-Block#how-the-krak
 
 https://github.com/krakenrf/krakensdr_docs/blob/e229d71d387ecab2e82b1b37e9e3b4aa929402af/misc_scripts/gpsd_tracker_krakenmap.py
 
+## Possible dataset for multi site, multi channel correlation testing
+
+https://www.genesys-lab.org/oracle
+
+
 ## Early draft Metadata exploration
 
 ```json
