@@ -56,12 +56,6 @@ This Signal Metadata Format SigMF namespace extension describes the National Tel
 
 https://github.com/NTIA/sigmf-ns-ntia
 
-### Julia
-
-This is a Julia package for working with metadata and storage associated with signals.
-
-https://github.com/JuliaIO/SigMF.jl/blob/main/src/datatype.jl
-
 ### RFML SigMF data manipulation
 
 https://github.com/IQTLabs/rfml/blob/main/rfml/data.py
@@ -71,6 +65,12 @@ https://github.com/IQTLabs/rfml/blob/main/rfml/data.py
 Although the use of bespoke, one off, data formats is the norm, there are a few hopeful uses of SigMF. For example, this data set from Virgina Tech.
 
 https://ieee-dataport.org/open-access/transfer-learning-rf-domain-adaptation-synthetic-dataset
+
+### Julia
+
+This is a Julia package for working with metadata and storage associated with signals.
+
+https://github.com/JuliaIO/SigMF.jl/blob/main/src/schema.json
 
 ## XMidas Blue format files 
 
