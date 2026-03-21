@@ -1,8 +1,7 @@
 - 👋 Hi, I’m @KelseyCreekSoftware
 - 👀 I’m interested in GNURadio
 - 🌱 I’m currently learning about IQ file formats
-- Just started working on SigMF and other [RF baseband IQ samples file formats](IQ-File-Information.md)
-- Here are some [blue file project notes](Blue-File-1-1-Project-Notes.md)
+- I'm working on SigMF converters and learning about [RF baseband IQ samples file formats](IQ-File-Information.md)
 
 ## Links to SDR Topics
 
@@ -62,6 +61,8 @@ https://github.com/pclov3r/iq_tool
 ### gamutRF
 
 gamutRF is a gnuradio-based SDR-based scanner, I/Q signal collector and identifier (using a image or I/Q based pyTorch model) - https://github.com/IQTLabs/gamutRF
+
+*Updated 3-20-2026*
 
 <!---
 KelseyCreekSoftware/KelseyCreekSoftware is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
