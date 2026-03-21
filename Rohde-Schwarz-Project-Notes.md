@@ -1,6 +1,6 @@
 # Rohde and Schwarz Converter Project Information
 
-*Updated November 20, 2025*
+*Updated March 20, 2026*
 
 ## Rohde & Schwarz "example files"
 
@@ -49,6 +49,23 @@ The library provides standardized read and write functions that encapsulate all 
 |Matlab v4	|.mat	|A file containing I/Q data in matlab file format v4. Channel related information is stored in matlab variables with names starting with 'ChX_'. 'X' represents the number of the channel with a lower bound of 1, e.g. variable Ch1_ChannelName contains the name of the first channel. The corresponding data is contained in ChX_Data. |
 |Matlab v7.3	|.mat	|A file containing I/Q data in matlab file format v7.3. It supports the same functionality as matlab v4 file format, but requires the Matlab Compiler Runtime (MCR) to be installed on the system.|
 
+### Additional Summary of File Types
+
+| Format        | Purpose                | Used By (Typical Instruments/Tools)          | Structure                                   | Notes |
+|---------------|-------------------------|-----------------------------------------------|----------------------------------------------|-------|
+| IQT / IQ‑TAR  | Legacy IQ capture       | RSA3000, FSIQ, FSQ, early FSV/FSW             | Text header + raw IQ (int16/float)           | Older format; simple but inconsistent. |
+| IQ‑TAR (new)  | Modern structured IQ    | Newer FSV/FSW/ESW via I/Q File Converter      | TAR archive + XML/JSON + binary IQ           | Successor to IQT; self‑describing. |
+| RSIQ          | Analysis‑friendly IQ    | R&S VSE (Vector Signal Explorer)              | XML metadata + binary IQ                     | Clean, simple, widely used in labs. |
+| RREC          | Long‑duration recording | FSW, FSV3000, ESW, RTP, R&S Recorder          | Chunked container (header + blocks + index)  | Most common modern capture format. |
+| RIQ           | Cross‑vendor format     | Tektronix tools, some R&S converters          | ASCII header + binary IQ                     | Not an R&S‑native format; often confused. |
+
+### Other File Types
+
+| Format        | Purpose                | Used By (Typical Instruments/Tools)          | Structure                                   | Notes |
+|---------------|-------------------------|-----------------------------------------------|----------------------------------------------|-------|
+| IQW           | Waveform playback       | SMW, SMBV, SGT, SFE/SFU, BTC (generators)     | ASCII header + binary IQ                     | For *generating* signals, not recording. |
+| SCPI Binary   | Streaming (no file)     | Modern analyzers via LAN/SCPI                 | Binary blocks over TCP/USB                   | Used for real‑time streaming. |
+| VRT (VITA‑49) | Streaming (no file)     | Some R&S receivers and monitoring systems     | VRT packets (metadata + IQ)                  | Standardized RF streaming format. |
 
 
 ## aaronia support for IQ TAR
