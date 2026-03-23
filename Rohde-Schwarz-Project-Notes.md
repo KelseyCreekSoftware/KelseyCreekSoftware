@@ -33,6 +33,9 @@ https://scdn.rohde-schwarz.com/ur/pws/dl_downloads/dl_common_library/dl_manuals/
 The iq-tar file format XML schema definition: http://www.rohde-schwarz.com/file/RsIqTar.xsd
 (Requires R&S login)
 
+
+https://scdn.rohde-schwarz.com/ur/pws/dl_downloads/dl_application/application_notes/1ef85/1EF85_3e_Converting_RS_IQ_files.pdf
+
 ### I/Q Data File Format (iq-tar)
 
 I/Q data is packed in a file with the extension .iq.tar. An iq-tar file contains I/Q data
@@ -54,7 +57,7 @@ an iq-tar file.
 
 A single binary file that contains the binary I/Q data of all channels. 
 
-#### Example XML File
+#### Example XML File #1
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -79,6 +82,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <PreviewData>...</PreviewData>
 </RS_IQ_TAR_FileFormat>
 ```
+#### Example XML File #2
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -99,57 +103,128 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 </RS_IQ_TAR_FileFormat>
 ```
 
-**RS_IQ_TAR_File Format** The root element of the XML file. 
+### Example File -  MultiChannel_4ch_fromLTE.iq
 
-**Name** Optional: describes the device or application that created the file.
+*NOTE: Data removed from PreviewData node.*
 
-**Comment** Optional: contains text that further describes the contents of the file.
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Please open this xml file in the web browser. If the stylesheet 'open_IqTar_xml_file_in_web_browser.xslt' is in the same directory the web browser can nicely display the xml file. -->
+<?xml-stylesheet type="text/xsl" href="open_IqTar_xml_file_in_web_browser.xslt"?>
+<RS_IQ_TAR_FileFormat fileFormatVersion="2" xsi:noNamespaceSchemaLocation="http://www.rohde-schwarz.com/file/RsIqTar.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Rohde-Schwarz EUTRA/LTE Analysis Software Version 2.8 Beta 3</Name>
+  <Comment>Rohde-Schwarz EUTRA/LTE Analysis Software Version 2.8 Beta 3 Comment</Comment>
+  <DateTime>2012-02-13T10:23:04</DateTime>
+  <Samples>307200</Samples>
+  <Clock unit="Hz">1.536e+007</Clock>
+  <Format>complex</Format>
+  <DataType>float32</DataType>
+  <ScalingFactor unit="V">1</ScalingFactor>
+  <NumberOfChannels>4</NumberOfChannels>
+  <DataFilename>fritz.complex.4ch.float32</DataFilename>
+  <UserData>Rohde-Schwarz EUTRA/LTE Analysis Software Version 2.8 Beta 3 UserData</UserData>
+  <PreviewData>
+    <ArrayOfChannel length="4">
+    <Channel>
+      <Name>Channel 1</Name>
+      <Comment>Channel 1 of 4</Comment>
+      <PowerVsTime>
+      <Min>
+          <ArrayOfFloat length="256">
+            <float>-74</float>      
+          </ArrayOfFloat>
+        </Max>
+      </PowerVsTime>
+      <Spectrum>
+        <Min>
+          <ArrayOfFloat length="256">
+        </Min>
+      </Spectrum>
+      <IQ>
+        <Histogram width="64" height="64">
+        0000
+        </Histogram>
+      </IQ>
+    </Channel>
+    </ArrayOfChannel>
+  </PreviewData>
+</RS_IQ_TAR_FileFormat>
+```
 
-**DateTime** Contains the date and time of type  xs:dateTime
+**RS_IQ_TAR_File Format** - The root element of the XML file. 
 
-**Samples**  Contains the number of samples of the I/Q data. For multi-channel signals all chan
+**Name** - Optional: describes the device or application that created the file.
+
+**Comment** - Optional: contains text that further describes the contents of the file.
+
+**DateTime** - Contains the date and time of type  xs:dateTime
+
+**Samples** - Contains the number of samples of the I/Q data. For multi-channel signals all chan
 nels have the same number of samples. One sample can be:
 ● A complex number represented as a pair of I and Q values
 ● A complex number represented as a pair of magnitude
 
-**Clock** Contains the clock frequency in Hz, i.e. the sample rate of the I/Q data.
+**Clock** - Contains the clock frequency in Hz, i.e. the sample rate of the I/Q data.
 
-**Format** Specifies how the binary data is saved in the I/Q data binary file (see
+**Format** - Specifies how the binary data is saved in the I/Q data binary file (see
 DataFilename element). Every sample must be in the same format. The format can
 be one of the following:
 
 ● complex: Complex number in cartesian format, i.e. I and Q values interleaved. I
 and Q are unitless
+
 ● real: Real number (unitless)
+
 ● polar: Complex number in polar format, i.e. magnitude (unitless) and phase
 (rad) values interleaved. Requires DataType = float32 or float64
 
-**DataType** Specifies the binary format used for samples in the I/Q data binary file. The
+**DataType** - Specifies the binary format used for samples in the I/Q data binary file. The
 following data types are allowed:
+
 ● int8: 8 bit signed integer data
+
 ● int16: 16 bit signed integer data
+
 ● int32: 32 bit signed integer data
+
 ● float32: 32 bit floating point data (IEEE 754)
+
 ● float64: 64 bit floating point data (IEEE 754)
 
-**ScalingFactor** Optional: describes how the binary data can be transformed into values in the unit
+**ScalingFactor** - Optional: describes how the binary data can be transformed into values in the unit
 Volt. The binary I/Q data itself has no unit. To get an I/Q sample in the unit Volt the
-saved samples have to be multiplied by the value of the ScalingFactor. For polar
-data only the magnitude value has to be multiplied. For multi-channel signals the
+saved samples have to be multiplied by the value of the ScalingFactor. 
+For polar data only the magnitude value has to be multiplied. For multi-channel signals the
 ScalingFactor must be applied to all channels.
-The attribute unit must be set to "V".
-The ScalingFactor must be > 0. If the ScalingFactor element is not defined, a
-value of 1 V is assumed.
 
-**NumberOfChannels** Optional: specifies the number of channels, e.g. of a MIMO signal, contained in the
+The attribute unit must be set to "V".
+
+The ScalingFactor must be > 0. If the ScalingFactor element is not defined, a value of 1 V is assumed.
+
+**NumberOfChannels** - Optional: specifies the number of channels, e.g. of a MIMO signal, contained in the
 I/Q data binary file. For multi-channels, the I/Q samples of the channels are expected
 to be interleaved within the I/Q data file. I
 
-**DataFilename** Contains the filename of the I/Q data binary file that is part of the iq-tar file.
+**DataFilename** - Contains the filename of the I/Q data binary file that is part of the iq-tar file.
 UserData Optional: contains user, application or device-specific XML data which is not part of
 the iq-tar specification. 
 
-**PreviewData** Optional: contains further XML elements that provide a preview of the I/Q data.
+**PreviewData** - Optional: contains further XML elements that provide a preview of the I/Q data.
+
+#### Binary Data Interleaving Example: Element order for complex cartesian data (3 channels)
+
+Complex data: I[channel no][time index], Q[channel no][time index]
+
+```txt
+I[0][0], Q[0][0],            // Channel 0, Complex sample 0
+I[1][0], Q[1][0],            // Channel 1, Complex sample 0
+I[2][0], Q[2][0],            // Channel 2, Complex sample 0
+I[0][1], Q[0][1],            // Channel 0, Complex sample 1
+I[1][1], Q[1][1],            // Channel 1, Complex sample 1
+I[2][1], Q[2][1],            // Channel 2, Complex sample 1
+I[0][2], Q[0][2],            // Channel 0, Complex sample 2
+I[1][2], Q[1][2],            // Channel 1, Complex sample 2
+I[2][2], Q[2][2],            // Channel 2, Complex sample 2
+```
 
 ## Rohde and Schwarz I/Q Data Import Export library (daiex)
 
@@ -158,7 +233,6 @@ Daiex is a cross-platform C++ library that provides functions to import and expo
 https://github.com/Rohde-Schwarz/daiex
 
 The library provides standardized read and write functions that encapsulate all file operations. The following file formats are supported:
-
 
 |File format| file extension | comment|
 | --- | --- |:------------------------------|
@@ -186,17 +260,16 @@ The library provides standardized read and write functions that encapsulate all 
 | SCPI Binary   | Streaming (no file)     | Modern analyzers via LAN/SCPI                 | Binary blocks over TCP/USB                   | Used for real‑time streaming. |
 | VRT (VITA‑49) | Streaming (no file)     | Some R&S receivers and monitoring systems     | VRT packets (metadata + IQ)                  | Standardized RF format for streaming. |
 
-# RsWaveform
 
-Load, manipulate and save R&S waveform files.
+## Additional Tools 
+
+## RsWaveform
+
+A tool to load, manipulate and save R&S waveform files.
 
 https://github.com/Rohde-Schwarz/RsWaveform
-
 
 ## aaronia support for IQ TAR
 
 https://v6-forum.aaronia.de/forum/topic/file-source-block/
-
-
-
 
