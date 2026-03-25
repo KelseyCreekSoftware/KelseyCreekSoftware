@@ -1,6 +1,6 @@
 # Rohde and Schwarz Converter Project Information
 
-*Updated March 22, 2026*
+*Updated March 25, 2026*
 
 ### DAIEX library as test resources
 
@@ -107,6 +107,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 *NOTE: Data removed from PreviewData node.*
 
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Please open this xml file in the web browser. If the stylesheet 'open_IqTar_xml_file_in_web_browser.xslt' is in the same directory the web browser can nicely display the xml file. -->
 <?xml-stylesheet type="text/xsl" href="open_IqTar_xml_file_in_web_browser.xslt"?>
@@ -158,8 +159,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 **DateTime** - Contains the date and time of type  xs:dateTime
 
-**Samples** - Contains the number of samples of the I/Q data. For multi-channel signals all chan
-nels have the same number of samples. One sample can be:
+**Samples** - Contains the number of samples of the I/Q data. For multi-channel signals all channels have the same number of samples. One sample can be:
 ● A complex number represented as a pair of I and Q values
 ● A complex number represented as a pair of magnitude
 
@@ -225,6 +225,18 @@ I[0][2], Q[0][2],            // Channel 0, Complex sample 2
 I[1][2], Q[1][2],            // Channel 1, Complex sample 2
 I[2][2], Q[2][2],            // Channel 2, Complex sample 2
 ```
+
+## Possible mapping
+
+✔ Clock → core:sample_rate
+
+✔ Samples → core:num_samples
+
+✔ DataType=float32 → core:datatype="cf32"
+
+✔ NumberOfChannels → core:num_channels
+
+✔ DateTime → core:datetime (after ISO conversion)
 
 ## Rohde and Schwarz I/Q Data Import Export library (daiex)
 
