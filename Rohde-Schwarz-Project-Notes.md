@@ -153,14 +153,16 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 **RS_IQ_TAR_File Format** - The root element of the XML file. 
 
-**Name** - Optional: describes the device or application that created the file.
+**Name** - *Optional*: describes the device or application that created the file.
 
-**Comment** - Optional: contains text that further describes the contents of the file.
+**Comment** - *Optional*: contains text that further describes the contents of the file.
 
 **DateTime** - Contains the date and time of type  xs:dateTime
 
 **Samples** - Contains the number of samples of the I/Q data. For multi-channel signals all channels have the same number of samples. One sample can be:
+
 ● A complex number represented as a pair of I and Q values
+
 ● A complex number represented as a pair of magnitude
 
 **Clock** - Contains the clock frequency in Hz, i.e. the sample rate of the I/Q data.
@@ -190,9 +192,10 @@ following data types are allowed:
 
 ● float64: 64 bit floating point data (IEEE 754)
 
-**ScalingFactor** - Optional: describes how the binary data can be transformed into values in the unit
+**ScalingFactor** - *Optional*: describes how the binary data can be transformed into values in the unit
 Volt. The binary I/Q data itself has no unit. To get an I/Q sample in the unit Volt the
 saved samples have to be multiplied by the value of the ScalingFactor. 
+
 For polar data only the magnitude value has to be multiplied. For multi-channel signals the
 ScalingFactor must be applied to all channels.
 
@@ -200,16 +203,16 @@ The attribute unit must be set to "V".
 
 The ScalingFactor must be > 0. If the ScalingFactor element is not defined, a value of 1 V is assumed.
 
-**NumberOfChannels** - Optional: specifies the number of channels, e.g. of a MIMO signal, contained in the
+**NumberOfChannels** - *Optional*: specifies the number of channels, e.g. of a MIMO signal, contained in the
 I/Q data binary file. For multi-channels, the I/Q samples of the channels are expected
 to be interleaved within the I/Q data file. I
 
 **DataFilename** - Contains the filename of the I/Q data binary file that is part of the iq-tar file.
 
-**UserData** - Optional: contains user, application or device-specific XML data which is not part of
+**UserData** - *Optional*: contains user, application or device-specific XML data which is not part of
 the iq-tar specification. 
 
-**PreviewData** - Optional: contains further XML elements that provide a preview of the I/Q data.
+**PreviewData** - *Optional*: contains further XML elements that provide a preview of the I/Q data.
 
 #### Binary Data Interleaving Example: Element order for complex cartesian data (3 channels)
 
@@ -229,10 +232,12 @@ I[2][2], Q[2][2],            // Channel 2, Complex sample 2
 
 ## Possible mapping
 
-| R&S XML           | SigMF Entry        | 
-|-------------------|---------------------|
-| ✔ Clock  unit="Hz"| core:sample_rate |
-| ✔ Samples         | core:num_samples |
+TBD - "core:frequency"
+
+| R&S XML             | SigMF Entry        | 
+|---------------------|---------------------|
+| ✔ Clock  unit="Hz" | core:sample_rate |
+| ✔ Samples          | core:num_samples |
 | ✔ NumberOfChannels | core:num_channels |
 | ✔ DateTime | core:datetime (after ISO conversion) |
 
@@ -243,14 +248,57 @@ I[2][2], Q[2][2],            // Channel 2, Complex sample 2
 
 | R&S XML    | SigMF Entry  | 
 |------------|--------------|
-| Name       | core:hw      |
-| Comment    | core:hw      |
+| Name       | Part of hardware_description "core:hw" |
+| Comment    | Part of hardware_description "core:hw" |
 
 | R&S XML       | SigMF Entry                        | 
 |---------------|------------------------------------|
-| DataFilename  | NA (SigMF uses .sigmf-data)        |
-| ScalingFactor | "rohdeschwarz:scaling_factor": 1.0 |
-| UserData      | Annotations ?  Preview ?           |
+| DataFilename  | NA (SigMF uses .sigmf-data)            |
+| ScalingFactor | "rohdeschwarz:scaling_factor": 1.0     |
+| UserData      | Part of hardware_description "core:hw" |
+
+
+## Early Prototype SigMF MetaData
+
+```xml
+{
+    "global": {
+        "core:author": "Mr. Schwarz",
+        "core:datatype": "cf32_le",
+        "core:extensions": [
+            {
+                "name": "rohdeschwarz",
+                "optional": true,
+                "version": "0.0.1"
+            }
+        ],
+        "core:hw": "---, TEST, datafilename : File.complex.1ch.float32",
+        "core:num_channels": 1,
+        "core:offset": 0,
+        "core:recorder": "Official SigMF Rohde and Schwarz converter",
+        "core:sample_rate": 16000000.0,
+        "core:sha512": "672c7455f4782c271536fe7626fbac4d04951778f4fc7cac9c3b894f83aa37d0c10e22ccf4688bfa15e7721d9a19bacf343c0454c19c08fe25f03c7256f6b0f9",
+        "core:version": "1.2.6",
+        "rohdeschwarz:iq_datafilename": "File.complex.1ch.float32",
+        "rohdeschwarz:scaling_factor": 1.0
+    },
+    "captures": [
+        {
+            "core:frequency": 0.0,
+            "core:sample_start": 0
+        }
+    ],
+    "annotations": [
+        {
+            "core:freq_lower_edge": -8000000.0,
+            "core:freq_upper_edge": 8000000.0,
+            "core:label": "rohdeschwarz",
+            "core:sample_count": 2000000,
+            "core:sample_start": 0
+        }
+    ]
+}
+```
 
 ## Rohde and Schwarz I/Q Data Import Export library (daiex)
 
