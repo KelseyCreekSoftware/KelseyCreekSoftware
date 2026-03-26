@@ -1,6 +1,6 @@
 # Rohde and Schwarz Converter Project Information
 
-*Updated March 25, 2026*
+*Updated March 26, 2026*
 
 ### DAIEX library as test resources
 
@@ -229,15 +229,28 @@ I[2][2], Q[2][2],            // Channel 2, Complex sample 2
 
 ## Possible mapping
 
-✔ Clock → core:sample_rate
+| R&S XML           | SigMF Entry        | 
+|-------------------|---------------------|
+| ✔ Clock  unit="Hz"| core:sample_rate |
+| ✔ Samples         | core:num_samples |
+| ✔ NumberOfChannels | core:num_channels |
+| ✔ DateTime | core:datetime (after ISO conversion) |
 
-✔ Samples → core:num_samples
+| R&S XML           | SigMF Entry        | 
+|-------------------|---------------------|
+| DataType=float32 | core:datatype="c**f32**" |
+| Format "complex" | core:datatype="**c**f32" |
 
-✔ DataType=float32 → core:datatype="cf32"
+| R&S XML    | SigMF Entry  | 
+|------------|--------------|
+| Name       | core:hw      |
+| Comment    | core:hw      |
 
-✔ NumberOfChannels → core:num_channels
-
-✔ DateTime → core:datetime (after ISO conversion)
+| R&S XML       | SigMF Entry                        | 
+|---------------|------------------------------------|
+| DataFilename  | NA (SigMF uses .sigmf-data)        |
+| ScalingFactor | "rohdeschwarz:scaling_factor": 1.0 |
+| UserData      | Annotations ?  Preview ?           |
 
 ## Rohde and Schwarz I/Q Data Import Export library (daiex)
 
