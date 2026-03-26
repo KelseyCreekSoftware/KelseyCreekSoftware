@@ -205,7 +205,8 @@ I/Q data binary file. For multi-channels, the I/Q samples of the channels are ex
 to be interleaved within the I/Q data file. I
 
 **DataFilename** - Contains the filename of the I/Q data binary file that is part of the iq-tar file.
-UserData Optional: contains user, application or device-specific XML data which is not part of
+
+**UserData** - Optional: contains user, application or device-specific XML data which is not part of
 the iq-tar specification. 
 
 **PreviewData** - Optional: contains further XML elements that provide a preview of the I/Q data.
