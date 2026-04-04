@@ -301,6 +301,44 @@ TBD - "core:frequency"
 }
 ```
 
+## Test Notes for Rohde and Schwarz converter
+
+### Example test uses
+
+```console
+python3 -m sigmf.convert --help
+
+python3 -m sigmf.convert --version
+
+python3 -m sigmf.convert C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\1MioSamples_1ch.iq.tar C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\converted_rohde_schwarz
+
+python3 -m sigmf.convert C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\1MioSamples_1ch.iq.tar C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\converted_rohde_schwarz --ncd
+
+python3 -m sigmf.convert C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\1MioSamples_1ch.iq.tar C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\converted_rohde_schwarz --archive
+```
+
+### Validate command for generated metadata
+
+python3 -m sigmf.validate C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\converted_rohde_schwarz.sigmf-meta
+
+### IQ.TAR files for testing
+
+- MultiChannel_4ch_fromLTE.iq.tar
+- FromFSW_1ch_WithPreview.iq.tar
+- 1MioSamples_1ch.iq.tar
+- записано.iq.tar
+- dummy.iq.tar
+- dummy_huge.tar
+- dummy_iso_time.iq.tar
+- dummy_multi_channel.iq.tar
+
+### To View Binary File Contents in Windows
+
+Format-Hex -Path 'C:\path\to\file.bin'
+
+Format-Hex -Path .\rohdeschwarzTestFile1.iq | more
+
+
 ## Rohde and Schwarz I/Q Data Import Export library (daiex)
 
 Daiex is a cross-platform C++ library that provides functions to import and export numeric I/Q data to or from various file formats. 
