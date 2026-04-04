@@ -1,26 +1,28 @@
 # Rohde and Schwarz Converter Project Information
 
-*Updated March 26, 2026*
+*Updated April 4, 2026*
 
-### DAIEX library as test resources
+## Rohde & Schwarz "example files"
 
-As part of the DAIEX library as test resources folder contains a number of samples.
+### DAIEX library test resources
+
+The Rohde Schwarz DAIEX library as test resources folder contains a number of samples.
 
 https://github.com/Rohde-Schwarz/daiex/tree/master/test/res
 
-## Rohde & Schwarz "example files"
+### RsWaveform
+
+A number of small, abstract test IQ.TAR files.
+
+https://github.com/Rohde-Schwarz/RsWaveform/tree/main/tests/data
+
+
+### I/Q Waveform File Conversion
 
 I/Q Waveform File Conversion for Use with Precise Broadcast Signal Generators includes the file R&S_(R)_PR100_StreamExample_V100.riq which was captured using a R&S specan
 
 https://www.rohde-schwarz.com/sg/applications/i-q-waveform-file-conversion-for-use-with-precise-broadcast-signal-generators-application-note_56280-15603.html
 
-### IEEE *DataPort* Crawdad IQ samples
-
-A free IEEE login is requird to access these recordings. For example:
-
-CRAWDAD up/rf_recordings
-
-https://ieee-dataport.org/open-access/crawdad-uprfrecordings
 
 ## IQ.TAR File Format Information
 
@@ -230,9 +232,7 @@ I[1][2], Q[1][2],            // Channel 1, Complex sample 2
 I[2][2], Q[2][2],            // Channel 2, Complex sample 2
 ```
 
-## Possible mapping
-
-TBD - "core:frequency"
+## Proposed mapping
 
 | R&S XML             | SigMF Entry        | 
 |---------------------|---------------------|
@@ -257,6 +257,7 @@ TBD - "core:frequency"
 | ScalingFactor | "rohdeschwarz:scaling_factor": 1.0     |
 | UserData      | Part of hardware_description "core:hw" |
 
+TBD - "core:frequency"
 
 ## Early Prototype SigMF MetaData
 
