@@ -4,13 +4,14 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-or-later
 # 
-# Last Updated: 3-26-2026
+# Last Updated: 4-03-2026
 
 """Rohde and Schwarz Converter"""
 
-import getpass
 import io
 import logging
+import tarfile
+import getpass
 import tempfile
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -26,36 +27,61 @@ from ..utils import SIGMF_DATETIME_ISO8601_FMT
 
 log = logging.getLogger()
 
+def xml_to_dict(elem):
+    """
+    Preview trace is a defined in IQ.TAR files as an XML sctructure - convert to JSON
+    
+    Convert an XML element and its children into a Python dict.
+    """
+    result = {}
+
+    # Include attributes
+    for key, value in elem.attrib.items():
+        result[key] = value
+
+    # Include text if meaningful
+    text = (elem.text or "").strip()
+    if text and len(elem) == 0:
+        return text
+
+    # Recurse into children
+    for child in elem:
+        child_value = xml_to_dict(child)
+        tag = child.tag
+
+        # Handle repeated tags (e.g., multiple <float>)
+        if tag in result:
+            if not isinstance(result[tag], list):
+                result[tag] = [result[tag]]
+            result[tag].append(child_value)
+        else:
+            result[tag] = child_value
+
+    return result
+
+
+def extract_iq_tar_to_directory(rohdeschwarz_path, file_dest_dir=None):
+    tar_path = Path(rohdeschwarz_path)
+
+    if file_dest_dir is None:
+        file_dest_dir = tar_path.parent / tar_path.stem
+
+    file_dest_dir.mkdir(parents=True, exist_ok=True)
+
+    with tarfile.open(tar_path, "r") as tar:
+        tar.extractall(file_dest_dir)
+    
+    xml_files = list(file_dest_dir.glob("*.xml"))
+    if not xml_files:
+        raise FileNotFoundError("No XML metadata file found inside IQ.TAR archive")
+
+    # Assuming there is only one XML file in the archive, return its path for further processing
+    return xml_files[0]  
 
 def _text_of(root: ET.Element, tag: str) -> Optional[str]:
     """Extract and strip text from XML element."""
     elem = root.find(tag)
     return elem.text.strip() if (elem is not None and elem.text is not None) else None
-
-
-def _parse_preview_trace(text: Optional[str]) -> List[float]:
-    """
-    Preview trace is a max-hold trace of the signal power across the capture, represented as a comma-separated string of values.
-
-    Example
-    -------
-    >>> trace_str = "-1.0, 0.1, 0.5, 0.3, 0.7"
-    >>> _parse_preview_trace(trace_str)
-    [-1.0, 0.1, 0.5, 0.3, 0.7]
-    """
-    if text is None:
-        return []
-    s = text.strip()
-    if s.endswith(","):
-        s = s[:-1]
-    if not s:
-        return []
-    parts = [p.strip() for p in s.split(",") if p.strip() != ""]
-    vals = []
-    for part in parts:
-        vals.append(float(part))
-    return vals
-
 
 def validate_rohdeschwarz(xml_path: Path) -> None:
     """
@@ -82,11 +108,11 @@ def validate_rohdeschwarz(xml_path: Path) -> None:
         raise SigMFConversionError(f"Invalid or missing CenterFrequency: {center_freq_raw}") from err
 
     # validate SampleRate
-    sample_rate_raw = _text_of(root, "Samples")
+    num_samples_raw = _text_of(root, "Samples")
     try:
-        sample_rate = float(sample_rate_raw)
+        sample_rate = float(num_samples_raw)
     except (TypeError, ValueError) as err:
-        raise SigMFConversionError(f"Invalid or missing SampleRate: {sample_rate_raw}") from err
+        raise SigMFConversionError(f"Invalid or missing SampleRate: {num_samples_raw}") from err
 
     if sample_rate <= 0:
         raise SigMFConversionError(f"Invalid SampleRate: {sample_rate} (must be > 0)")
@@ -98,30 +124,41 @@ def validate_rohdeschwarz(xml_path: Path) -> None:
 
     # validate DataType, for example, "float32"
     data_type_raw = _text_of(root, "DataType")
+    if data_type_raw == "int8" or data_type_raw == "int16" or data_type_raw == "int32":
+         raise SigMFConversionError("Data types int8, int16, or int32 are not currently supported in the converter")
+    if data_type_raw == "float64":
+         raise SigMFConversionError("Data type float64 is not currently supported in the converter")
     if data_type_raw is None:
         raise SigMFConversionError("Missing DataType in rohdeschwarz XML")
 
-    # TODO: Find second format field in XML to determine if this is complex or real data
-    # validate Format - for example, "complex"
-    # format_raw = _text_of(root, "Format")
-    # if format_raw is None:
-    #     raise SigMFConversionError("Missing Format in rohdeschwarz XML")
+    # TODO: Determine if support should be added to determine for real and polar
+    # validate Format - expecting "complex"
+    format_raw = _text_of(root, "Format")
+    if format_raw == "real" or format_raw == "polar":
+         raise SigMFConversionError("Real an Polar Formats are not currently supported in the converter")
+    if format_raw is None:
+         raise SigMFConversionError("Missing Format in rohdeschwarz XML")
 
     # validate channel for example, "1"
-    numberofchannel_raw = _text_of(root, "NumberOfChannels")
-    if numberofchannel_raw is None:
-        raise SigMFConversionError("Missing NumberOfChannels in rohdeschwarz XML")
+    numberofchannels_raw = _text_of(root, "NumberOfChannels")
+    if numberofchannels_raw is None:
+        # Missing NumberOfChannels in rohdeschwarz XML so use 1
+        numberofchannels_raw =1
+   
+    # validate associated IQ file exists - example IQ file name "File.complex.1ch.float32"
+    datafilename_raw = _text_of(root, "DataFilename")
+    if datafilename_raw is None:
+        raise SigMFConversionError("Missing DataFilename in rohdeschwarz XML")
 
-    # validate associated IQ file exists
-    # example IQ file name "File.complex.1ch.float32"
-    # iq_file_path = xml_path.with_suffix(data_type_raw)
-    iq_file_path = xml_path.with_suffix(".iq")
+    iq_file_path = xml_path.parent / datafilename_raw
+
+    # iq_file_path = xml_path # Not assuming .iq extension for the associated IQ file
     if not iq_file_path.exists():
         raise SigMFConversionError(f"Could not find associated IQ file: {iq_file_path}")
 
     # validate IQ file size is aligned to sample boundary
     filesize = iq_file_path.stat().st_size
-    elem_size = np.dtype(np.int16).itemsize
+    elem_size = np.dtype(np.float32).itemsize
     frame_bytes = 2 * elem_size  # I and Q components
     if filesize % frame_bytes != 0:
         raise SigMFConversionError(f"IQ file size {filesize} not divisible by {frame_bytes}; partial sample present")
@@ -155,13 +192,21 @@ def _build_metadata(xml_path: Path) -> Tuple[dict, dict, list, int]:
     # validate required fields and associated IQ file
     validate_rohdeschwarz(xml_path)
 
-    # TODO: Determine how to handle center frequency, for now default to 0
+    # extract and convert required fields
+
+    # TODO: R&S files don't seem to have a center frequency field, so maybe add a comment about this being an Oscilloscope capture.
     center_frequency = float("0")
 
-    # extract and convert required fields
-    numberofchannel_raw = _text_of(root, "NumberOfChannels")
-    # Confirm this is corect
-    sample_rate = float(_text_of(root, "Clock"))
+    numberofchannels_raw = _text_of(root, "NumberOfChannels")
+
+    if numberofchannels_raw is None:
+        # Missing NumberOfChannels in R&S XML → default to 1
+        numberofchannels = 1
+    else:
+        numberofchannels = int(numberofchannels_raw)
+
+    sample_rate = float(_text_of(root, "Clock")) 
+    
     data_type_raw = _text_of(root, "DataType")
 
     # optional EpochNanos field
@@ -173,10 +218,8 @@ def _build_metadata(xml_path: Path) -> Tuple[dict, dict, list, int]:
         except ValueError:
             log.warning(f"could not parse EpochNanos: {epoch_nanos_raw}")
 
-    # TODO: Probably need to use logic similar to blue file for datatypes...
-    # TODO: Complex, etc. 
-    # TODO: Determine big or little endian
-    # map datatype
+    # TODO: Determine if other datatypes are used and if so, use similar logic to blue file for datatypes 
+    # R&S seem to be little endian
     if data_type_raw == "float32":
         data_type = "cf32_le"  # complex float32 little-endian
     else:
@@ -208,8 +251,11 @@ def _build_metadata(xml_path: Path) -> Tuple[dict, dict, list, int]:
             log.warning(f"could not parse ScaleFactor: {scale_factor_raw}")
 
     # parse optional preview data if present
-    preview_data_raw = _text_of(root, "PreviewData")
-    preview_data = _parse_preview_trace(preview_data_raw) if preview_data_raw else None
+    preview_node = root.find(".//PreviewData")
+    if preview_node is not None:
+        preview_data = xml_to_dict(preview_node)
+    else:
+        preview_data = None    
 
     name = _text_of(root, "Name")
     comment = _text_of(root, "Comment")
@@ -220,31 +266,25 @@ def _build_metadata(xml_path: Path) -> Tuple[dict, dict, list, int]:
     hw_parts = []
 
     if name:
-        hw_parts.append(f"{name}")
+        hw_parts.append(f"Name: {name}")
     else:
         hw_parts.append("Rohde and Schwarz Device")
 
     if comment:
-        hw_parts.append(f"{comment}")
+        hw_parts.append(f"Comment: {comment}")
 
     if userdata:
-        hw_parts.append(f"{userdata}")
-
-    #  TODO: Consider if this should be moved. 
-    if datafilename :
-        hw_parts.append(f"datafilename : {datafilename }")
+        hw_parts.append(f"User Data: {userdata}")
 
     hardware_description = ", ".join(hw_parts) if hw_parts else "Rohde and Schwarz Device"
 
     # strip the extension from the original file path
-    base_file_name = xml_path.with_suffix("")
-    # build the .iq file path for data file
-    data_file_path = base_file_name.with_suffix(".iq")
+    data_file_path = xml_path.parent / Path(datafilename).name
     filesize = data_file_path.stat().st_size
 
-    # TODO: Update for R&S
-    # complex 16-bit integer IQ data > ci16_le in SigMF
-    elem_size = np.dtype(np.int16).itemsize
+    # TODO: Validate for R&S
+    # # R&S IQ.TAR uses complex float32 IQ data -> cf32_le in SigMF terms
+    elem_size = np.dtype(np.float32).itemsize
     frame_bytes = 2 * elem_size  # I and Q components
 
     # calculate sample count using the original IQ data file size
@@ -259,12 +299,14 @@ def _build_metadata(xml_path: Path) -> Tuple[dict, dict, list, int]:
         dt = datetime.fromtimestamp(secs, tz=timezone.utc) + timedelta(microseconds=rem_ns / 1000)
         iso_8601_string = dt.strftime(SIGMF_DATETIME_ISO8601_FMT)
 
+
+
     # base global metadata
     global_md = {
         SigMFFile.AUTHOR_KEY: getpass.getuser(),
         SigMFFile.DATATYPE_KEY: data_type,
         SigMFFile.HW_KEY: hardware_description,
-        SigMFFile.NUM_CHANNELS_KEY: 1,
+        SigMFFile.NUM_CHANNELS_KEY: numberofchannels,
         SigMFFile.RECORDER_KEY: "Official SigMF Rohde and Schwarz converter",
         SigMFFile.SAMPLE_RATE_KEY: sample_rate,
         SigMFFile.EXTENSIONS_KEY: [{"name": "rohdeschwarz", "version": "0.0.1", "optional": True}],
@@ -274,14 +316,12 @@ def _build_metadata(xml_path: Path) -> Tuple[dict, dict, list, int]:
     # only include fields that aren't already represented in standard SigMF metadata
     if scaling_factor:
         global_md["rohdeschwarz:scaling_factor"] = scaling_factor
-    if scale_factor:
-        global_md["rohdeschwarz:scale_factor_mw"] = scale_factor  # to convert raw to mW
     if datafilename:
         global_md["rohdeschwarz:iq_datafilename"] = datafilename  # provenance
     if userdata:
         global_md["rohdeschwarz:userdata"] = userdata #open ended field for user defined data.
     if preview_data:
-        global_md["rohdeschwarz:preview_trace"] = preview_data  # TBD trace
+        global_md["rohdeschwarz:preview_trace"] = preview_data  
 
     # capture info
     capture_info = {
@@ -290,9 +330,8 @@ def _build_metadata(xml_path: Path) -> Tuple[dict, dict, list, int]:
     if iso_8601_string:
         capture_info[SigMFFile.DATETIME_KEY] = iso_8601_string
 
-    # TODO: Investigate if clock maps to if_bandwidth or if there is another field in the XML that should be used for this
-    raw_clock = _text_of(root, "Clock")
-    if_bandwidth = float(raw_clock) if raw_clock else None
+    # TODO: Validate bandwidth/2 for this R&S capture 
+    if_bandwidth = sample_rate/2
 
     # create annotations array using calculated values
     annotations = []
@@ -312,14 +351,14 @@ def _build_metadata(xml_path: Path) -> Tuple[dict, dict, list, int]:
     return global_md, capture_info, annotations, sample_count_calculated
 
 
-def convert_iq_data(xml_path: Path, sample_count: int) -> np.ndarray:
+def convert_iq_data(data_file_path: Path, sample_count: int) -> np.ndarray:
     """
     Convert IQ data in .iq file to SigMF based on values in rohdeschwarz XML file.
 
     Parameters
     ----------
-    xml_path : Path
-        Path to the rohdeschwarz XML file.
+    data_file_path : Path
+        Path to the IQ file.
     sample_count : int
         Number of samples to read.
 
@@ -329,16 +368,16 @@ def convert_iq_data(xml_path: Path, sample_count: int) -> np.ndarray:
         Parsed samples.
     """
     log.debug("parsing rohdeschwarz file data values")
-    iq_file_path = xml_path.with_suffix(".iq")
 
     # calculate element count (I and Q samples)
     elem_count = sample_count * 2  # *2 for I and Q samples
 
-    # complex 16-bit integer IQ data > ci16_le in SigMF
-    elem_size = np.dtype(np.int16).itemsize
+    # complex 32-bit float IQ data > cf32_le in SigMF
+    elem_size = np.dtype(np.float32).itemsize
 
-    # read raw interleaved int16 IQ
-    samples = np.fromfile(iq_file_path, dtype=np.int16, offset=0, count=elem_count)
+    # TODO: Investigate for R&S and validate multichannel  
+    # read raw interleaved float32 IQ
+    samples = np.fromfile(data_file_path, dtype=np.float32, offset=0, count=elem_count)
 
     # trim trailing partial bytes
     if samples.nbytes % elem_size != 0:
@@ -382,7 +421,10 @@ def rohdeschwarz_to_sigmf(
     SigMFConversionError
         If the rohdeschwarz file cannot be read.
     """
-    rohdeschwarz_path = Path(rohdeschwarz_path)
+
+    xml_file_to_parse = extract_iq_tar_to_directory(rohdeschwarz_path)
+
+    rohdeschwarz_path = Path(xml_file_to_parse)
     out_path = None if out_path is None else Path(out_path)
 
     # auto-enable NCD when no output path is specified
@@ -400,6 +442,11 @@ def rohdeschwarz_to_sigmf(
 
     filenames = get_sigmf_filenames(base_path)
 
+    # Get unique IQ filename from global_info
+    iq_filename = global_info.get("rohdeschwarz:iq_datafilename")
+    print(f"iq_filename: {iq_filename}")
+
+
     # create NCD if specified, otherwise create standard SigMF dataset or archive
     if create_ncd:
         # rohdeschwarz files have no header or trailing bytes
@@ -408,8 +455,7 @@ def rohdeschwarz_to_sigmf(
         capture_info[SigMFFile.HEADER_BYTES_KEY] = 0
 
         # build the .iq file path for data file
-        base_file_name = rohdeschwarz_path.with_suffix("")
-        data_file_path = base_file_name.with_suffix(".iq")
+        data_file_path = rohdeschwarz_path.parent / iq_filename
 
         # create metadata-only SigMF for NCD pointing to original file
         meta = SigMFFile(global_info=global_info)
@@ -431,7 +477,7 @@ def rohdeschwarz_to_sigmf(
         if out_path is not None:
             output_dir = filenames["meta_fn"].parent
             output_dir.mkdir(parents=True, exist_ok=True)
-            meta.tofile(filenames["meta_fn"], toarchive=False, overwrite=overwrite)
+            meta.tofile(filenames["meta_fn"], toarchive=False)
             log.info("wrote SigMF non-conforming metadata to %s", filenames["meta_fn"])
 
         log.debug("created %r", meta)
@@ -439,13 +485,16 @@ def rohdeschwarz_to_sigmf(
 
     # create archive if specified, otherwise write separate meta and data files
     if create_archive:
+        # determine unique IQ file name
+        data_file_path = rohdeschwarz_path.parent / iq_filename
+   
         # use temporary directory for data file when creating archive
         with tempfile.TemporaryDirectory() as temp_dir:
             data_path = Path(temp_dir) / filenames["data_fn"].name
 
             # convert iq data and write to temp directory
             try:
-                iq_data = convert_iq_data(rohdeschwarz_path, sample_count)
+                iq_data = convert_iq_data(data_file_path, sample_count)
             except Exception as e:
                 raise SigMFConversionError(f"Failed to convert or parse IQ data values: {e}") from e
 
@@ -469,7 +518,7 @@ def rohdeschwarz_to_sigmf(
 
             output_dir = filenames["archive_fn"].parent
             output_dir.mkdir(parents=True, exist_ok=True)
-            meta.tofile(filenames["archive_fn"], toarchive=True, overwrite=overwrite)
+            meta.tofile(filenames["archive_fn"], toarchive=True)
             log.info("wrote SigMF archive to %s", filenames["archive_fn"])
             # metadata returned should be for this archive
             meta = fromfile(filenames["archive_fn"])
@@ -477,8 +526,12 @@ def rohdeschwarz_to_sigmf(
     else:
         # write separate meta and data files
         # convert iq data for rohdeschwarz file
+        # determine unique IQ file name
+        data_file_path = rohdeschwarz_path.parent / iq_filename
+        print(f"data_file_path: {data_file_path}")
+
         try:
-            iq_data = convert_iq_data(rohdeschwarz_path, sample_count)
+            iq_data = convert_iq_data(data_file_path, sample_count)
         except Exception as e:
             raise SigMFConversionError(f"Failed to convert or parse IQ data values: {e}") from e
 
