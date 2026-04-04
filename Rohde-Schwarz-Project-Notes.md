@@ -338,6 +338,29 @@ Format-Hex -Path 'C:\path\to\file.bin'
 
 Format-Hex -Path .\rohdeschwarzTestFile1.iq | more
 
+### Example launch json for debugging
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Debug SigMF Converter",
+            "type": "python",
+            "request": "launch",
+            "module": "sigmf.convert",
+            "args": [
+                "C:\\Data1\\Ham_Radio\\SDR\\rohde_schwarz_to_sigmf_converter\\FromFSW_1ch_WithPreview.iq.tar",
+                "C:\\Data1\\Ham_Radio\\SDR\\rohde_schwarz_to_sigmf_converter\\convertedrohdeschwarzfile",
+                "-v"
+            ],
+            "console": "integratedTerminal",            "justMyCode": false
+        }
+    ]
+}
+```
+
 
 ## Rohde and Schwarz I/Q Data Import Export library (daiex)
 
