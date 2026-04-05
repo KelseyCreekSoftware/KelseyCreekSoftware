@@ -2,6 +2,10 @@
 
 *Updated April 4, 2026*
 
+Initial commit of prototype converter for Rohde and Schwarz IQ.TAR
+
+https://github.com/sigmf/sigmf-python/pull/144
+
 ## Rohde & Schwarz "example files"
 
 ### DAIEX library test resources
