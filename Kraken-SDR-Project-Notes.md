@@ -1,6 +1,6 @@
 # Kraken SDR Project Notes
 
-*Updated 4-12-26*
+*Updated 4-29-2026*
 
 ## SDR KrakenSDR Overview
 
@@ -31,7 +31,13 @@ https://github.com/bshelters/krakenSDR_sigmf
 
 https://github.com/bshelters/krakenSDR_sigmf/blob/main/src/krakenrf_sigmf.cpp
 
-## Heimdall IQStreamer
+## Heimdall 
+
+### DAQ
+
+https://github.com/krakenrf/heimdall_daq_fw/
+
+### IQStreamer
 
 https://github.com/krakenrf/heimdall_iq_rec/blob/development/_src/IQStreamer.py
 
@@ -45,6 +51,10 @@ This is a GNU Radio Block for KrakenSDR. It connects via a TCP socket connection
 and this block receives the coherent IQ sample output and makes it available for further DSP processing in GNU Radio.
 
 https://github.com/krakenrf/krakensdr_docs/wiki/08.-GNU-Radio-Block#how-the-krakensdr-source-block-works
+
+### Beam Forming
+
+https://github.com/ADolbyB/sdr-beamforming/tree/main/Toolbox/KrakenSDR/GNURadio
 
 ## GPS Tracker app for Kraken Map 
 
