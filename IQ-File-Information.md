@@ -1,6 +1,6 @@
 # RF Baseband IQ File Format Information
 
-*Updated 5-12-2026*
+*Updated 5-16-2026*
 
 This document summarizes key formats, standards, and tools related to IQ file handling and metadata. These formats can be evaluated and stack ranked for possible import into SigMF.
 
@@ -31,6 +31,10 @@ https://sigmf.readthedocs.io/en/latest/index.html#
 https://app.element.io/#/room/#sigmf:gnuradio.org
 
 Available via discord: https://discord.com/
+
+For example:
+
+https://discord.com/channels/953339616369446952/953361486221307945
 
 ### GitHub
 
