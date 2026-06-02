@@ -1,6 +1,6 @@
 # RF Baseband IQ File Format Information
 
-*Updated 5-16-2026*
+*Updated 6-02-2026*
 
 This document summarizes key formats, standards, and tools related to IQ file handling and metadata. These formats can be evaluated and stack ranked for possible import into SigMF.
 
@@ -17,6 +17,9 @@ https://sigmf.org/
 ### SigMF Python library
 
 SigMF is a Python library for working with radio recordings in .sigmf format according to the SigMF standard. It offers a simple and intuitive API for Python developers.
+The sigmf library makes it easy to interact with Signal Metadata Format (SigMF) recordings.
+
+https://github.com/sigmf/sigmf-python
 
 ### Wiki
 
@@ -36,9 +39,7 @@ For example:
 
 https://discord.com/channels/953339616369446952/953361486221307945
 
-### GitHub
 
-https://github.com/sigmf/sigmf-python
 
 ### libsigmf 
 
