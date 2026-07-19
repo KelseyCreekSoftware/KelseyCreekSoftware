@@ -1,6 +1,6 @@
 # Rohde and Schwarz Converter Project Information
 
-*Updated April 4, 2026*
+*Updated July 19, 2026*
 
 Initial commit of prototype converter for Rohde and Schwarz IQ.TAR
 
@@ -262,6 +262,45 @@ I[2][2], Q[2][2],            // Channel 2, Complex sample 2
 | UserData      | Part of hardware_description "core:hw" |
 
 TBD - "core:frequency"
+
+
+## Example Test Output
+
+The following files have been been the primary focus for most of the testing.
+
+```cmd
+8,000,000 1MioSamples_1ch.sigmf-data
+8,008 FromFSW_1ch_WithPreview.sigmf-data
+9,830,400 MultiChannel_4ch_fromLTE.sigmf-data
+2,050,312 записано.sigmf-data
+```
+### Example rendering
+
+This section contains visual diagrams associated with the SIGMF datasets used in this project. Each diagram corresponds to a specific capture file and provides a quick visual reference for signal characteristics, channel layout, or metadata context.
+
+**Source file:** `1MioSamples_1ch.sigmf-data`  
+*A single‑channel capture*
+![1 MIMO Samples Diagram](diagrams/R&S-ARB-Toolbox-Rendering/1MimoSamples_1ch.iq.tar.png)
+
+**GNU Radio QT GUI Rendering**
+![1 MIMO Samples Diagram](diagrams/GNURadio-QTGUI-Rendering/1MioSamples_1ch_QTGUI-WaterFall.png)
+
+**From FSW — 1 Channel With Preview**
+*Source file:* `FromFSW_1ch_WithPreview.sigmf-data`  
+![FromFSW_1ch_WithPreview](diagrams/R&S-ARB-Toolbox-Rendering/1MimoSamples_1ch.iq.tar.png)
+
+**Recorded Capture — записано**
+*Source file:* `записано.sigmf-data`  
+A recorded dataset (Russian: “записано” = “recorded”). Useful for testing Unicode filenames and metadata handling.
+![1Recorded Capture — записано](diagrams/R&S-ARB-Toolbox-Rendering/3anncaho.iq.tar.png)
+
+**dummy_huge.iq.tar**
+*Source file:* `dummy_huge.iq.tar.sigmf-data`  
+![dummy_huge.iq.tar](diagrams/R&S-ARB-Toolbox-Rendering/dummy_huge.iq.tar.png)
+
+**Multi‑Channel LTE Capture — 4 Channels**
+*Source file:* `MultiChannel_4ch_fromLTE.sigmf-data`  
+(Diagram not yet available)
 
 ## Early Prototype SigMF MetaData
 
