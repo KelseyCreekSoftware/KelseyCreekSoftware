@@ -302,7 +302,7 @@ A recorded dataset (Russian: “записано” = “recorded”). Useful fo
 *Source file:* `MultiChannel_4ch_fromLTE.sigmf-data`  
 (Diagram not yet available)
 
-## Early Prototype SigMF MetaData
+## Prototype of SigMF MetaData
 
 ```xml
 {
@@ -316,7 +316,7 @@ A recorded dataset (Russian: “записано” = “recorded”). Useful fo
                 "version": "0.0.1"
             }
         ],
-        "core:hw": "---, TEST, datafilename : File.complex.1ch.float32",
+        "core:hw": "Name: ---, Comment: TEST",
         "core:num_channels": 1,
         "core:offset": 0,
         "core:recorder": "Official SigMF Rohde and Schwarz converter",
@@ -337,7 +337,7 @@ A recorded dataset (Russian: “записано” = “recorded”). Useful fo
             "core:freq_lower_edge": -8000000.0,
             "core:freq_upper_edge": 8000000.0,
             "core:label": "rohdeschwarz",
-            "core:sample_count": 2000000,
+            "core:sample_count": 1000000,
             "core:sample_start": 0
         }
     ]
@@ -362,7 +362,10 @@ python3 -m sigmf.convert C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter
 
 ### Validate command for generated metadata
 
-python3 -m sigmf.validate C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\converted_rohde_schwarz.sigmf-meta
+```ps
+python3 -m sigmf.validate C:\Data1\Ham_Radio\SDR\rohde_schwarz_to_sigmf_converter\converted_rohde_schwarz*
+INFO:root:Validated all 2 files OK!
+```
 
 ### IQ.TAR files for testing
 
